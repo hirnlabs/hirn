@@ -20,12 +20,13 @@ A binary overlay layer (using `y-crdt` or `Automerge`) tracks live collaborative
 - **Snapshots**: Periodic binary snapshots + log segments.
 - **Compaction**: Append-only logs are compacted to maintain performance, but can be discarded/rebuilt because the Tier 1 Files are the source of truth.
 
-### Tier 3: Queryable Index (Derived & Editable)
-A multi-modal index built from specialized storage engines stored as local files, allowing both users and agents to modify or query them directly:
-- **SQLite**: For structured, relational metadata and application state.
+### Tier 3: Queryable Indices
+A multi-modal index composed of specialized storage engines, all derived from Tier 1 and Tier 2:
+- **SQLite**: For structured, relational metadata, task tracking, and application configuration.
 - **Grafeo**: A local-first graph database engine for knowledge linking, modeling entity relationships, and traversing complex connections.
-- **Vector Database (Local)**: For semantic search, RAG (Retrieval-Augmented Generation), and high-dimensional similarity retrieval.
-- **Derivability**: While these databases are first-class citizens that can be edited by the user or agents, the system maintains the guarantee that if an index becomes corrupted, it can be entirely regenerated from Tier 1 files and Tier 2 CRDT logs.
+- **Vector Database**: For semantic search, RAG (Retrieval-Augmented Generation), and high-dimensional similarity retrieval.
+
+> **Note**: All indices are maintained in sync with your files, providing a high-performance query layer for your agents and tools.
 
 ## 3. The Sync Core (Rust)
 The complexity of distribution is encapsulated in a unified Rust core, shared across all platforms (Flutter, Tauri/Rust, Web).
