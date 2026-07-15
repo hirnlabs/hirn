@@ -361,7 +361,7 @@ rsync -avz --delete dist/ user@server:/etc/www/hirn-home/
 └── ...other static files
 ```
 
-**No Node.js needed to serve** — just static files. Nginx is a simple HTTP server.
+**No Node.js needed to serve** - just static files. Nginx is a simple HTTP server.
 
 ---
 

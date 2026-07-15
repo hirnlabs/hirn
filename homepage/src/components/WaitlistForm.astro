@@ -33,7 +33,7 @@ const { class: className } = Astro.props;
       if (emailInput) {
         const email = emailInput.value.trim();
         if (email) {
-          const subject = encodeURIComponent("Waitlist signup — hirn");
+          const subject = encodeURIComponent("Waitlist signup - hirn");
           const body = encodeURIComponent(`Hi,\n\nI'd like to join the hirn waitlist.\n\nMy email: ${email}`);
           window.location.href = `mailto:focccus@proton.me?subject=${subject}&body=${body}`;
         }

@@ -20,14 +20,14 @@
   </defs>
 
   <!-- ===================================================== -->
-  <!-- CENTER: HIRN — dark rounded square + brain silhouette -->
+  <!-- CENTER: HIRN - dark rounded square + brain silhouette -->
   <!-- ===================================================== -->
   <g id="hirn-center">
     <!-- Dark box -->
     <rect x="430" y="220" width="240" height="250" rx="36" fill="#1e1e1c" stroke="#333" stroke-width="2.5" />
     <!-- Brain side-view silhouette (amber/orange, simple anatomical profile) -->
     <g transform="translate(550,325)" fill="#d4862a" stroke="#e8a94a" stroke-width="1.5">
-      <!-- Main brain shape — side view profile -->
+      <!-- Main brain shape - side view profile -->
       <path d="
         M 0,-70
         C 25,-72  50,-62  62,-45
@@ -46,7 +46,7 @@
         C -10,-68 -4,-70  0,-70
         Z
       " fill="#d4862a" stroke="none" />
-      <!-- Brain folds (sulci) — curved lines for realism -->
+      <!-- Brain folds (sulci) - curved lines for realism -->
       <path d="M -20,-50 C 0,-45 20,-38 40,-20" stroke="#c47820" stroke-width="2.5" fill="none" stroke-linecap="round" />
       <path d="M -40,-10 C -20,-15 10,-10 35,5" stroke="#c47820" stroke-width="2.5" fill="none" stroke-linecap="round" />
       <path d="M -30,15 C -10,10 15,18 30,35" stroke="#c47820" stroke-width="2" fill="none" stroke-linecap="round" />
