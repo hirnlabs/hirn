@@ -1,0 +1,72 @@
+---
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="server — hirn" description="Local RPC inference flexibility for your models.">
+  <div class="wrap py-12">
+    <a href="/" class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
+      <svg class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+      </svg>
+      Back to system overview
+    </a>
+
+    <section class="mb-12 border-b border-border pb-10">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-bg">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm-3-6h.008v.008h-.008v-.008z" /></svg>
+        </div>
+        <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">server</h1>
+      </div>
+      <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
+        Local inference flexibility. The RPC distributed model server handles requests seamlessly when the router tier is set to <code class="font-mono text-sm px-1 bg-surface border border-border rounded">local</code>.
+      </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-10 order-2 md:order-1">
+        
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Backend Agnostic</h2>
+          <p class="text-secondary leading-relaxed">
+            The hirn server doesn't force you into a single execution engine. It provides a unified RPC interface that seamlessly connects to multiple powerful backends:
+          </p>
+          <ul class="list-disc list-outside ml-5 text-secondary space-y-2 mt-4">
+            <li><strong>llama.cpp:</strong> For highly optimized CPU/GPU offloading on consumer hardware.</li>
+            <li><strong>vLLM:</strong> For high-throughput serving on larger VRAM setups.</li>
+            <li><strong>exo / cactus:</strong> For experimental and specialized local routing architectures.</li>
+          </ul>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Distributed VRAM Management</h2>
+          <p class="text-secondary leading-relaxed">
+            Running large models often requires more VRAM than a single machine holds. The server intelligently pools and manages VRAM across multiple GPUs or even multiple devices on your local network, treating your home lab as a single unified inference cluster.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="space-y-4 order-1 md:order-2">
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Zero Setup</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Starts alongside your agent automatically. No complicated Docker configurations or Python environments required for standard operation.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Cross-Platform</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Natively optimized for Windows, Linux, and macOS, providing bare-metal performance regardless of your OS setup.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Auto-Scaling</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Dynamically unloads idle models from VRAM to free up system memory, only loading them when a router request comes through.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,408 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text { font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif; }
+    .label { font-size: 14px; font-weight: 700; fill: #2a2a28; text-anchor: middle; }
+    .sublabel { font-size: 11px; font-weight: 400; fill: #7e7e7b; text-anchor: middle; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+    .arrow-label { font-size: 11.5px; fill: #2a2a28; font-weight: 600; }
+    .component-label { font-size: 13px; font-weight: 700; fill: #2a2a28; font-family: 'JetBrains Mono', monospace; text-anchor: middle; }
+    .store-label { font-size: 11px; font-weight: 700; fill: #2a2a28; text-anchor: middle; letter-spacing: 0.05em; }
+    .badge-text { font-size: 11px; font-weight: 700; fill: white; text-anchor: middle; letter-spacing: 0.06em; }
+  </style>
+
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 8 3, 0 6" fill="#2a2a28" />
+    </marker>
+    <marker id="ah-r" markerWidth="8" markerHeight="6" refX="1" refY="3" orient="auto" markerUnits="strokeWidth">
+      <polygon points="8 0, 0 3, 8 6" fill="#2a2a28" />
+    </marker>
+  </defs>
+
+  <!-- ===================================================== -->
+  <!-- CENTER: HIRN — dark rounded square + brain silhouette -->
+  <!-- ===================================================== -->
+  <g id="hirn-center">
+    <!-- Dark box -->
+    <rect x="430" y="220" width="240" height="250" rx="36" fill="#1e1e1c" stroke="#333" stroke-width="2.5" />
+    <!-- Brain side-view silhouette (amber/orange, simple anatomical profile) -->
+    <g transform="translate(550,325)" fill="#d4862a" stroke="#e8a94a" stroke-width="1.5">
+      <!-- Main brain shape — side view profile -->
+      <path d="
+        M 0,-70
+        C 25,-72  50,-62  62,-45
+        C 74,-28  76,-8   72,10
+        C 68,26   58,40   42,50
+        C 34,55   26,58   20,60
+        C 14,62   8,60    4,56
+        L 2,52
+        C -2,56  -8,58  -14,56
+        C -20,53 -24,46 -24,38
+        C -28,42 -34,42 -38,38
+        C -44,32 -42,22 -38,16
+        C -48,18 -56,14 -60,4
+        C -64,-6 -60,-20 -52,-30
+        C -44,-42 -30,-55 -16,-64
+        C -10,-68 -4,-70  0,-70
+        Z
+      " fill="#d4862a" stroke="none" />
+      <!-- Brain folds (sulci) — curved lines for realism -->
+      <path d="M -20,-50 C 0,-45 20,-38 40,-20" stroke="#c47820" stroke-width="2.5" fill="none" stroke-linecap="round" />
+      <path d="M -40,-10 C -20,-15 10,-10 35,5" stroke="#c47820" stroke-width="2.5" fill="none" stroke-linecap="round" />
+      <path d="M -30,15 C -10,10 15,18 30,35" stroke="#c47820" stroke-width="2" fill="none" stroke-linecap="round" />
+      <path d="M 10,-60 C 15,-40 10,-20 15,5" stroke="#c47820" stroke-width="2" fill="none" stroke-linecap="round" />
+      <!-- Cerebellum hatching -->
+      <path d="M -30,30 C -22,28 -16,34 -10,30" stroke="#c47820" stroke-width="1.5" fill="none" />
+      <path d="M -34,36 C -26,34 -20,40 -14,36" stroke="#c47820" stroke-width="1.5" fill="none" />
+      <!-- Subtle outer glow -->
+      <ellipse cx="5" cy="-5" rx="75" ry="75" fill="none" stroke="#e8a94a" stroke-width="1" opacity="0.15" />
+    </g>
+    <!-- HIRN label -->
+    <text x="550" y="500" style="font-size: 26px; font-weight: 800; fill: #2a2a28; text-anchor: middle; letter-spacing: 0.14em;">HIRN</text>
+  </g>
+
+  <!-- ===================================================== -->
+  <!-- TOP-LEFT: Mobile phone                                -->
+  <!-- ===================================================== -->
+  <g id="mobile" transform="translate(100,50)">
+    <!-- Phone back shadow -->
+    <rect x="8" y="-4" width="55" height="95" rx="10" fill="#d0d0cd" stroke="#aaa" stroke-width="1.5" />
+    <!-- Phone front -->
+    <rect x="0" y="0" width="55" height="95" rx="10" fill="white" stroke="#2a2a28" stroke-width="2.5" />
+    <!-- Screen -->
+    <rect x="6" y="16" width="43" height="58" rx="3" fill="#f0f0ee" stroke="#ddd" stroke-width="1" />
+    <!-- Top speaker -->
+    <line x1="18" y1="9" x2="37" y2="9" stroke="#aaa" stroke-width="2.5" stroke-linecap="round" />
+    <!-- Home button -->
+    <circle cx="27.5" cy="84" r="5" fill="none" stroke="#aaa" stroke-width="1.5" />
+  </g>
+  <text x="128" y="168" class="label" style="font-size: 15px;">MOBILE</text>
+
+  <!-- ===================================================== -->
+  <!-- Arrow: Mobile → HIRN (right-angle: right then down)   -->
+  <!-- "LLama/OpenAI Endpoint" label                         -->
+  <!-- ===================================================== -->
+  <polyline points="160,60 430,60 430,220" stroke="#2a2a28" stroke-width="2" fill="none" marker-end="url(#ah)" marker-start="url(#ah-r)" />
+  <text x="295" y="52" class="arrow-label" text-anchor="middle">LLama/OpenAI Endpoint</text>
+
+  <!-- ===================================================== -->
+  <!-- Arrow: Mobile → HIRN (diagonal for Tailscale VPN)     -->
+  <!-- ===================================================== -->
+  <line x1="165" y1="115" x2="430" y2="310" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" />
+  <text x="270" y="190" class="arrow-label" transform="rotate(-28,270,190)" text-anchor="middle" style="font-style: italic;">Tailscale VPN</text>
+
+  <!-- ===================================================== -->
+  <!-- Arrow: Mobile ↔ MCP (vertical, ACP label)             -->
+  <!-- ===================================================== -->
+  <line x1="128" y1="175" x2="128" y2="310" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" marker-start="url(#ah-r)" />
+  <text x="118" y="248" class="arrow-label" transform="rotate(-90,118,248)" text-anchor="middle">Agent Client Protocol (ACP)</text>
+
+  <!-- ===================================================== -->
+  <!-- LEFT: MCP SERVER                                      -->
+  <!-- ===================================================== -->
+  <g id="mcp-server" transform="translate(65,318)">
+    <!-- Laptop body -->
+    <rect x="0" y="0" width="100" height="65" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="2" />
+    <!-- Screen -->
+    <rect x="8" y="8" width="84" height="44" rx="4" fill="#2c1a1a" />
+    <!-- Chip icon -->
+    <rect x="30" y="16" width="40" height="28" rx="5" fill="#c0392b" />
+    <!-- Chip diamond/circle -->
+    <circle cx="50" cy="30" r="8" fill="none" stroke="white" stroke-width="1.5" />
+    <path d="M50,24 L54,30 L50,36 L46,30 Z" fill="white" opacity="0.7" />
+    <!-- Chip pins top -->
+    <line x1="38" y1="12" x2="38" y2="16" stroke="#c0392b" stroke-width="2" />
+    <line x1="50" y1="12" x2="50" y2="16" stroke="#c0392b" stroke-width="2" />
+    <line x1="62" y1="12" x2="62" y2="16" stroke="#c0392b" stroke-width="2" />
+    <!-- Laptop base -->
+    <path d="M-5,65 L105,65 L110,75 L-10,75 Z" fill="#2a2a28" />
+  </g>
+  <!-- MCP badge -->
+  <rect x="72" y="400" width="108" height="24" rx="5" fill="#1e1e1c" />
+  <text x="126" y="417" class="badge-text">MCP SERVER</text>
+
+  <!-- Arrow: MCP ↔ HIRN (horizontal) -->
+  <line x1="180" y1="360" x2="425" y2="360" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" marker-start="url(#ah-r)" />
+
+  <!-- ===================================================== -->
+  <!-- BOTTOM-LEFT: hirn_server (neural net nodes)           -->
+  <!-- ===================================================== -->
+  <g id="hirn-server" transform="translate(55,540)">
+    <!-- Nodes layer 1 -->
+    <circle cx="35" cy="15" r="8" fill="none" stroke="#2a2a28" stroke-width="2.5" />
+    <circle cx="75" cy="15" r="8" fill="none" stroke="#2a2a28" stroke-width="2.5" />
+    <!-- Nodes layer 2 -->
+    <circle cx="15" cy="55" r="8" fill="none" stroke="#2a2a28" stroke-width="2.5" />
+    <circle cx="55" cy="55" r="8" fill="none" stroke="#2a2a28" stroke-width="2.5" />
+    <circle cx="95" cy="55" r="8" fill="none" stroke="#2a2a28" stroke-width="2.5" />
+    <!-- Nodes layer 3 -->
+    <circle cx="35" cy="95" r="8" fill="none" stroke="#2a2a28" stroke-width="2.5" />
+    <circle cx="75" cy="95" r="8" fill="none" stroke="#2a2a28" stroke-width="2.5" />
+    <!-- Connections 1→2 -->
+    <line x1="35" y1="23" x2="15" y2="47" stroke="#2a2a28" stroke-width="1.5" />
+    <line x1="35" y1="23" x2="55" y2="47" stroke="#2a2a28" stroke-width="1.5" />
+    <line x1="75" y1="23" x2="55" y2="47" stroke="#2a2a28" stroke-width="1.5" />
+    <line x1="75" y1="23" x2="95" y2="47" stroke="#2a2a28" stroke-width="1.5" />
+    <!-- Connections 2→3 -->
+    <line x1="15" y1="63" x2="35" y2="87" stroke="#2a2a28" stroke-width="1.5" />
+    <line x1="55" y1="63" x2="35" y2="87" stroke="#2a2a28" stroke-width="1.5" />
+    <line x1="55" y1="63" x2="75" y2="87" stroke="#2a2a28" stroke-width="1.5" />
+    <line x1="95" y1="63" x2="75" y2="87" stroke="#2a2a28" stroke-width="1.5" />
+    <!-- Cross connections (faint) -->
+    <line x1="35" y1="23" x2="95" y2="47" stroke="#2a2a28" stroke-width="1" opacity="0.3" />
+    <line x1="15" y1="63" x2="75" y2="87" stroke="#2a2a28" stroke-width="1" opacity="0.3" />
+  </g>
+  <text x="110" y="660" class="component-label">hirn_server</text>
+  <text x="110" y="678" class="sublabel" style="font-size: 10px;">llama.cpp / vLLM /</text>
+  <text x="110" y="692" class="sublabel" style="font-size: 10px;">exo / cactus</text>
+
+  <!-- Arrow: hirn_server → HIRN (right-angle: up then right) -->
+  <polyline points="110,530 110,465 430,465" stroke="#2a2a28" stroke-width="2" fill="none" marker-end="url(#ah)" />
+
+  <!-- ===================================================== -->
+  <!-- TOP-RIGHT: hirn_ui (dark card, like original)         -->
+  <!-- ===================================================== -->
+  <g id="hirn-ui" transform="translate(780,100)">
+    <!-- Dark card bg -->
+    <rect width="130" height="90" rx="14" fill="#1e1e1c" stroke="#333" stroke-width="2" />
+    <!-- Cloud icon -->
+    <ellipse cx="65" cy="28" rx="32" ry="16" fill="#5dade2" opacity="0.6" />
+    <ellipse cx="48" cy="26" rx="20" ry="14" fill="#85c1e9" opacity="0.7" />
+    <ellipse cx="82" cy="26" rx="18" ry="12" fill="#85c1e9" opacity="0.7" />
+    <!-- Browser mini window inside cloud -->
+    <rect x="38" y="32" width="54" height="34" rx="4" fill="#2c3e50" stroke="#5dade2" stroke-width="1" />
+    <rect x="38" y="32" width="54" height="10" rx="4" fill="#34495e" />
+    <rect x="38" y="38" width="54" height="4" fill="#34495e" />
+    <!-- URL bar -->
+    <rect x="52" y="34" width="32" height="5" rx="2" fill="#5dade2" opacity="0.5" />
+    <!-- Content lines -->
+    <rect x="42" y="48" width="30" height="2" rx="1" fill="#5dade2" opacity="0.4" />
+    <rect x="42" y="54" width="40" height="2" rx="1" fill="#5dade2" opacity="0.3" />
+    <rect x="42" y="60" width="24" height="2" rx="1" fill="#5dade2" opacity="0.2" />
+  </g>
+  <text x="845" y="210" class="component-label" style="font-size: 14px;">hirn_ui</text>
+  <text x="845" y="228" class="sublabel">Web Channels /</text>
+  <text x="845" y="243" class="sublabel">API Gateway</text>
+
+  <!-- Arrow: HIRN → hirn_ui (right-angle: right then up) -->
+  <polyline points="670,300 770,300 770,150 780,150" stroke="#2a2a28" stroke-width="2" fill="none" marker-end="url(#ah)" marker-start="url(#ah-r)" />
+
+  <!-- ===================================================== -->
+  <!-- "Custom HTML/JS Skills" corner label                  -->
+  <!-- ===================================================== -->
+  <text x="1100" y="52" class="label" style="font-size: 13px;">Custom</text>
+  <text x="1100" y="68" class="label" style="font-size: 13px;">HTML/JS Skills</text>
+
+  <!-- ===================================================== -->
+  <!-- RIGHT COLUMN: Notes, Tasks, Calendar, Skills          -->
+  <!-- (Connected from hirn_ui going right)                  -->
+  <!-- ===================================================== -->
+
+  <!-- ---- Notes ---- -->
+  <g id="notes-icon" transform="translate(1020,90)">
+    <rect width="80" height="80" rx="16" fill="#c09040" />
+    <rect x="5" y="5" width="70" height="70" rx="13" fill="#d4a050" />
+    <!-- Paper lines -->
+    <line x1="16" y1="28" x2="60" y2="28" stroke="white" stroke-width="2" opacity="0.8" />
+    <line x1="16" y1="38" x2="52" y2="38" stroke="white" stroke-width="2" opacity="0.6" />
+    <line x1="16" y1="48" x2="58" y2="48" stroke="white" stroke-width="2" opacity="0.5" />
+    <line x1="16" y1="58" x2="42" y2="58" stroke="white" stroke-width="2" opacity="0.3" />
+    <!-- Fold -->
+    <path d="M52,5 L70,5 L70,24 Z" fill="#b8873a" opacity="0.5" />
+  </g>
+  <text x="1060" y="190" class="label">Notes</text>
+  <!-- Arrow: hirn_ui → Notes (horizontal) -->
+  <line x1="910" y1="140" x2="1015" y2="140" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" />
+
+  <!-- ---- Tasks ---- -->
+  <g id="tasks-icon" transform="translate(1020,220)">
+    <rect width="80" height="85" rx="8" fill="#f0efeb" stroke="#c8c6c0" stroke-width="2" />
+    <!-- Clipboard top -->
+    <rect x="24" y="-6" width="32" height="16" rx="5" fill="#c8c6c0" />
+    <!-- Check rows -->
+    <rect x="14" y="20" width="13" height="13" rx="2.5" fill="none" stroke="#2a2a28" stroke-width="1.8" />
+    <polyline points="16,27 20,31 27,23" stroke="#27ae60" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="33" y1="27" x2="62" y2="27" stroke="#2a2a28" stroke-width="2" />
+
+    <rect x="14" y="40" width="13" height="13" rx="2.5" fill="none" stroke="#2a2a28" stroke-width="1.8" />
+    <polyline points="16,47 20,51 27,43" stroke="#27ae60" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+    <line x1="33" y1="47" x2="58" y2="47" stroke="#2a2a28" stroke-width="2" />
+
+    <rect x="14" y="60" width="13" height="13" rx="2.5" fill="none" stroke="#2a2a28" stroke-width="1.8" />
+    <line x1="33" y1="67" x2="60" y2="67" stroke="#2a2a28" stroke-width="2" opacity="0.4" />
+  </g>
+  <text x="1060" y="325" class="label">Tasks</text>
+  <!-- Arrow: HIRN → Tasks (horizontal) -->
+  <line x1="670" y1="350" x2="765" y2="350" stroke="#2a2a28" stroke-width="2" fill="none" />
+  <!-- Right-angle connector: horizontal bar, then down to tasks row, then right -->
+  <polyline points="765,350 765,270 1015,270" stroke="#2a2a28" stroke-width="2" fill="none" marker-end="url(#ah)" />
+
+  <!-- ---- Calendar ---- -->
+  <g id="calendar-icon" transform="translate(1020,360)">
+    <rect width="80" height="75" rx="14" fill="#2a5a8a" stroke="#1e4a6e" stroke-width="2" />
+    <!-- Header bar -->
+    <rect x="0" y="0" width="80" height="22" rx="14" fill="#1e4a6e" />
+    <rect x="0" y="12" width="80" height="10" fill="#1e4a6e" />
+    <!-- Rings -->
+    <rect x="20" y="-5" width="7" height="14" rx="2.5" fill="#e0e0dd" />
+    <rect x="53" y="-5" width="7" height="14" rx="2.5" fill="#e0e0dd" />
+    <!-- Grid cells -->
+    <g fill="white" opacity="0.85">
+      <rect x="10" y="28" width="12" height="9" rx="2" />
+      <rect x="26" y="28" width="12" height="9" rx="2" />
+      <rect x="42" y="28" width="12" height="9" rx="2" />
+      <rect x="58" y="28" width="12" height="9" rx="2" />
+      <rect x="10" y="42" width="12" height="9" rx="2" />
+      <rect x="26" y="42" width="12" height="9" rx="2" />
+      <rect x="42" y="42" width="12" height="9" rx="2" />
+      <rect x="58" y="42" width="12" height="9" rx="2" />
+      <rect x="10" y="56" width="12" height="9" rx="2" />
+      <rect x="26" y="56" width="12" height="9" rx="2" />
+      <rect x="42" y="56" width="12" height="9" rx="2" />
+    </g>
+  </g>
+  <text x="1060" y="455" class="label">Calendar</text>
+  <!-- Arrow: HIRN → Calendar (right then down) -->
+  <polyline points="670,380 775,380 775,400 1015,400" stroke="#2a2a28" stroke-width="2" fill="none" marker-end="url(#ah)" />
+
+  <!-- ---- Skills (terminal) ---- -->
+  <g id="skills-icon" transform="translate(1020,490)">
+    <rect width="80" height="70" rx="14" fill="#1e1e1c" stroke="#3a3a38" stroke-width="2" />
+    <!-- Terminal prompt -->
+    <text x="15" y="38" style="font-family: 'JetBrains Mono', monospace; font-size: 24px; fill: #27ae60; font-weight: 700;">&gt;_</text>
+    <!-- Dim output lines -->
+    <rect x="15" y="48" width="40" height="2" rx="1" fill="#555" opacity="0.5" />
+    <rect x="15" y="54" width="28" height="2" rx="1" fill="#555" opacity="0.3" />
+  </g>
+  <text x="1060" y="580" class="label">Skills</text>
+  <!-- Dotted continuation -->
+  <text x="1060" y="600" style="font-size: 18px; fill: #aaa; text-anchor: middle;">.</text>
+  <text x="1060" y="614" style="font-size: 18px; fill: #aaa; text-anchor: middle;">.</text>
+  <text x="1060" y="628" style="font-size: 18px; fill: #aaa; text-anchor: middle;">.</text>
+  <!-- Arrow: HIRN → Skills (right then down) -->
+  <polyline points="670,420 785,420 785,530 1015,530" stroke="#2a2a28" stroke-width="2" fill="none" marker-end="url(#ah)" />
+
+  <!-- ===================================================== -->
+  <!-- BOTTOM-RIGHT: hirn_transcribe (microphone)            -->
+  <!-- ===================================================== -->
+  <g id="hirn-transcribe" transform="translate(730,440)">
+    <!-- Mic body -->
+    <rect x="14" y="5" width="28" height="42" rx="14" fill="#9b59b6" />
+    <rect x="14" y="5" width="28" height="42" rx="14" fill="none" stroke="#8e44ad" stroke-width="2" />
+    <!-- Mic grille -->
+    <line x1="20" y1="15" x2="36" y2="15" stroke="white" stroke-width="1" opacity="0.35" />
+    <line x1="20" y1="21" x2="36" y2="21" stroke="white" stroke-width="1" opacity="0.35" />
+    <line x1="20" y1="27" x2="36" y2="27" stroke="white" stroke-width="1" opacity="0.35" />
+    <line x1="20" y1="33" x2="36" y2="33" stroke="white" stroke-width="1" opacity="0.35" />
+    <!-- Stand arc -->
+    <path d="M8,40 C8,62 48,62 48,40" fill="none" stroke="#8e44ad" stroke-width="2.5" />
+    <!-- Stand pole -->
+    <line x1="28" y1="62" x2="28" y2="75" stroke="#8e44ad" stroke-width="2.5" />
+    <!-- Base -->
+    <line x1="15" y1="75" x2="41" y2="75" stroke="#8e44ad" stroke-width="2.5" stroke-linecap="round" />
+  </g>
+  <text x="758" y="536" class="component-label" style="font-size: 12px;">hirn_transcribe</text>
+  <text x="758" y="552" class="sublabel">Local Voice</text>
+  <text x="758" y="566" class="sublabel">Transcription</text>
+
+  <!-- Arrow: HIRN → transcribe (right-angle: right then down) -->
+  <polyline points="670,440 710,440 710,470 730,470" stroke="#2a2a28" stroke-width="2" fill="none" marker-end="url(#ah)" />
+
+  <!-- ===================================================== -->
+  <!-- BOTTOM ROW: Data stores                               -->
+  <!-- Vertical trunk from HIRN, horizontal bar, drops down  -->
+  <!-- ===================================================== -->
+
+  <!-- Main vertical trunk from HIRN bottom -->
+  <line x1="550" y1="475" x2="550" y2="650" stroke="#2a2a28" stroke-width="2" />
+  <!-- Horizontal distribution bar -->
+  <line x1="195" y1="650" x2="900" y2="650" stroke="#2a2a28" stroke-width="2" />
+
+  <!-- Vertical drops down + up arrows (bidirectional) -->
+  <!-- Cal storage -->
+  <line x1="195" y1="650" x2="195" y2="695" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" />
+  <line x1="215" y1="695" x2="215" y2="665" stroke="#2a2a28" stroke-width="1.5" marker-end="url(#ah)" />
+  <!-- Main DB -->
+  <line x1="370" y1="650" x2="370" y2="695" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" />
+  <line x1="390" y1="695" x2="390" y2="665" stroke="#2a2a28" stroke-width="1.5" marker-end="url(#ah)" />
+  <!-- Mail -->
+  <line x1="545" y1="650" x2="545" y2="695" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" />
+  <line x1="565" y1="695" x2="565" y2="665" stroke="#2a2a28" stroke-width="1.5" marker-end="url(#ah)" />
+  <!-- Tasks repo -->
+  <line x1="720" y1="650" x2="720" y2="695" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" />
+  <line x1="740" y1="695" x2="740" y2="665" stroke="#2a2a28" stroke-width="1.5" marker-end="url(#ah)" />
+  <!-- Notes storage -->
+  <line x1="895" y1="650" x2="895" y2="695" stroke="#2a2a28" stroke-width="2" marker-end="url(#ah)" />
+  <line x1="915" y1="695" x2="915" y2="665" stroke="#2a2a28" stroke-width="1.5" marker-end="url(#ah)" />
+
+  <!-- ---- Calendar Storage ---- -->
+  <g transform="translate(155,700)">
+    <rect x="5" y="5" width="65" height="55" rx="6" fill="white" stroke="#c8c6c0" stroke-width="1.5" />
+    <rect x="5" y="5" width="65" height="16" rx="6" fill="#3498db" opacity="0.6" />
+    <rect x="5" y="16" width="65" height="5" fill="#3498db" opacity="0.6" />
+    <g fill="#ccc">
+      <rect x="14" y="28" width="9" height="7" rx="1.5" />
+      <rect x="27" y="28" width="9" height="7" rx="1.5" />
+      <rect x="40" y="28" width="9" height="7" rx="1.5" />
+      <rect x="53" y="28" width="9" height="7" rx="1.5" />
+      <rect x="14" y="40" width="9" height="7" rx="1.5" />
+      <rect x="27" y="40" width="9" height="7" rx="1.5" />
+      <rect x="40" y="40" width="9" height="7" rx="1.5" />
+    </g>
+    <circle cx="10" cy="62" r="10" fill="#27ae60" />
+    <polyline points="5,62 9,66 16,58" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <text x="195" y="785" class="store-label">CALENDAR</text>
+  <text x="195" y="799" class="store-label">STORAGE</text>
+
+  <!-- ---- Main Database ---- -->
+  <g transform="translate(340,700)">
+    <ellipse cx="38" cy="14" rx="32" ry="11" fill="#d5d5d2" stroke="#aaa" stroke-width="1.5" />
+    <rect x="6" y="14" width="64" height="48" fill="#c8c8c5" />
+    <ellipse cx="38" cy="62" rx="32" ry="11" fill="#bbbbb8" stroke="#aaa" stroke-width="1.5" />
+    <ellipse cx="38" cy="14" rx="32" ry="11" fill="#e0e0dd" stroke="#aaa" stroke-width="1.5" />
+    <ellipse cx="38" cy="30" rx="32" ry="9" fill="none" stroke="#bbb" stroke-width="1" opacity="0.5" />
+    <ellipse cx="38" cy="46" rx="32" ry="9" fill="none" stroke="#bbb" stroke-width="1" opacity="0.5" />
+  </g>
+  <text x="378" y="785" class="store-label">MAIN</text>
+  <text x="378" y="799" class="store-label">DATABASE</text>
+
+  <!-- ---- Mail Server / Archive ---- -->
+  <g transform="translate(510,705)">
+    <rect x="0" y="10" width="72" height="48" rx="6" fill="#f0d060" stroke="#d4a830" stroke-width="1.5" />
+    <path d="M0,14 L36,38 L72,14" fill="none" stroke="#c89820" stroke-width="2" />
+    <!-- Shield -->
+    <path d="M55,32 L55,48 C55,56 68,62 68,62 C68,62 81,56 81,48 L81,32 Z" fill="#c8860b" stroke="#a06808" stroke-width="1.5" />
+    <polyline points="62,44 66,48 76,38" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+  <text x="553" y="785" class="store-label">MAIL SERVER</text>
+  <text x="553" y="799" class="store-label">/ ARCHIVE</text>
+
+  <!-- ---- Tasks Repository ---- -->
+  <g transform="translate(685,700)">
+    <rect x="5" y="5" width="65" height="65" rx="5" fill="white" stroke="#c8c6c0" stroke-width="1.5" />
+    <rect x="20" y="-2" width="36" height="14" rx="5" fill="#c8c6c0" />
+    <line x1="16" y1="24" x2="55" y2="24" stroke="#bbb" stroke-width="2" />
+    <line x1="16" y1="35" x2="50" y2="35" stroke="#bbb" stroke-width="2" />
+    <line x1="16" y1="46" x2="56" y2="46" stroke="#bbb" stroke-width="2" />
+    <line x1="16" y1="57" x2="38" y2="57" stroke="#bbb" stroke-width="2" />
+    <!-- Pencil -->
+    <line x1="56" y1="52" x2="72" y2="36" stroke="#e67e22" stroke-width="3.5" stroke-linecap="round" />
+    <polygon points="72,36 75,33 69,33" fill="#e67e22" />
+  </g>
+  <text x="725" y="785" class="store-label">TASKS</text>
+  <text x="725" y="799" class="store-label">REPOSITORY</text>
+
+  <!-- ---- Notes Storage ---- -->
+  <g transform="translate(860,700)">
+    <rect x="5" y="5" width="65" height="65" rx="5" fill="#fffde8" stroke="#e0dbb0" stroke-width="1.5" />
+    <line x1="16" y1="20" x2="56" y2="20" stroke="#d0cb90" stroke-width="1.8" />
+    <line x1="16" y1="30" x2="52" y2="30" stroke="#d0cb90" stroke-width="1.8" />
+    <line x1="16" y1="40" x2="58" y2="40" stroke="#d0cb90" stroke-width="1.8" />
+    <line x1="16" y1="50" x2="46" y2="50" stroke="#d0cb90" stroke-width="1.8" />
+    <line x1="16" y1="60" x2="50" y2="60" stroke="#d0cb90" stroke-width="1.8" />
+  </g>
+  <text x="900" y="785" class="store-label">NOTES</text>
+  <text x="900" y="799" class="store-label">STORAGE</text>
+
+</svg>

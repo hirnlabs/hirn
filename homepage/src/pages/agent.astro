@@ -1,0 +1,72 @@
+---
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="agent — hirn" description="The desktop UI and CLI agent built on top of Pi.">
+  <div class="wrap py-12">
+    <a href="/" class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
+      <svg class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+      </svg>
+      Back to system overview
+    </a>
+
+    <section class="mb-12 border-b border-border pb-10">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-bg">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" /></svg>
+        </div>
+        <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">agent</h1>
+      </div>
+      <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
+        The UI/UX layer you actually interact with. <strong>hirn_agent</strong> is built directly on top of the Pi framework, transforming it into a powerful desktop developer assistant.
+      </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-10 order-2 md:order-1">
+        
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Seamless ModelRegistry Integration</h2>
+          <p class="text-secondary leading-relaxed">
+            By leveraging Pi's extensible <code class="font-mono text-sm px-1 bg-surface border border-border rounded">ModelRegistry</code>, the <strong>hirn_router</strong> extension sits transparently in the background. It dynamically swaps the active model under the hood on a per-turn basis, ensuring that you maintain a completely unified chat history and context window without interruptions.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Curated Desktop Plugins</h2>
+          <p class="text-secondary leading-relaxed">
+            The agent comes packed with specialized local plugins that give Pi total mastery over your desktop environment:
+          </p>
+          <ul class="list-disc list-outside ml-5 text-secondary space-y-2 mt-4">
+            <li><strong>Agent Control Protocol (ACP):</strong> Standardized interface for the agent to control your desktop UI and interact with applications.</li>
+            <li><strong>Local File Access:</strong> Secure, permission-scoped read/write capabilities for large local codebases.</li>
+            <li><strong>Shell Execution:</strong> Sandboxed terminal commands directly executed by the agent to run tests, build scripts, or manage git.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="space-y-4 order-1 md:order-2">
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Native Feel</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            No clunky web wrappers. The agent feels like a native part of your operating system, deeply integrated with your existing developer tools.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Background Execution</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            The agent runs silently in your system tray, letting you push long-running tasks to the background and notifying you when they finish.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Context Aware</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Uses ACP to understand what's on your screen, injecting relevant active editor context directly into your prompts seamlessly.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+@theme {
+	--font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+	--font-mono: "JetBrains Mono", "Courier New", monospace;
+
+	--color-bg: var(--bg);
+	--color-surface: var(--surface);
+	--color-primary: var(--primary);
+	--color-secondary: var(--secondary);
+	--color-weak: var(--weak);
+	--color-border: var(--border);
+
+	/* Teal design accents */
+	--color-accent: var(--accent);
+	--color-accent-hover: var(--accent-hover);
+	--color-accent-glow: var(--accent-glow);
+}
+
+:root {
+	/* Light theme: warm, elegant tones */
+	--bg: #f7f7f5;
+	--surface: #ffffff;
+	--primary: #2a2a28;
+	--secondary: #7e7e7b;
+	--weak: #b0b0ad;
+	--border: #e2e2df;
+
+	/* B/W Light Theme */
+	--accent: #2a2a28;
+	--accent-hover: #000000;
+	--accent-glow: rgba(42, 42, 40, 0.06);
+}
+
+/* Fallback/Default for user preference if no manual override */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--bg: #090909;
+		--surface: #121212;
+		--primary: #f3f4f6;
+		--secondary: #9ca3af;
+		--weak: #4b5563;
+		--border: #1f2937;
+
+		/* B/W Dark Theme */
+		--accent: #f3f4f6;
+		--accent-hover: #ffffff;
+		--accent-glow: rgba(243, 244, 246, 0.15);
+	}
+}
+
+/* Explicit theme overrides */
+[data-theme="dark"] {
+	--bg: #090909;
+	--surface: #121212;
+	--primary: #f3f4f6;
+	--secondary: #9ca3af;
+	--weak: #4b5563;
+	--border: #1f2937;
+
+	--accent: #f3f4f6;
+	--accent-hover: #ffffff;
+	--accent-glow: rgba(243, 244, 246, 0.15);
+}
+
+[data-theme="light"] {
+	--bg: #f7f7f5;
+	--surface: #ffffff;
+	--primary: #2a2a28;
+	--secondary: #7e7e7b;
+	--weak: #b0b0ad;
+	--border: #e2e2df;
+
+	--accent: #2a2a28;
+	--accent-hover: #000000;
+	--accent-glow: rgba(42, 42, 40, 0.06);
+}
+
+@layer base {
+	html {
+		background-color: var(--color-bg);
+		color: var(--color-primary);
+		font-family: var(--font-sans);
+		font-size: 1.0625rem;
+		line-height: 1.6;
+		scroll-behavior: smooth;
+		overflow-x: clip;
+		-webkit-text-size-adjust: 100%;
+		transition: background-color 0.3s ease, color 0.3s ease;
+	}
+
+	body {
+		overflow-x: clip;
+	}
+
+	h1,
+	h2,
+	h3 {
+		font-weight: 700;
+		line-height: 1.1;
+	}
+
+	img {
+		max-width: 100%;
+		height: auto;
+		display: block;
+	}
+
+	a {
+		color: inherit;
+		text-decoration: none;
+	}
+}
+
+@layer utilities {
+	.wrap {
+		max-width: 1080px;
+		margin-inline: auto;
+		padding-inline: clamp(1.25rem, 5vw, 2.5rem);
+	}
+}
+
+@keyframes slow-pulse {
+	0%, 100% {
+		transform: scale(1);
+		opacity: 0.25;
+	}
+	50% {
+		transform: scale(1.12);
+		opacity: 0.55;
+	}
+}
+
+.animate-slow-pulse {
+	animation: slow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes brain-float {
+	0%, 100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-6px);
+	}
+}
+
+@keyframes brain-pulse {
+	0%, 100% {
+		transform: scale(1);
+		opacity: 0.85;
+	}
+	50% {
+		transform: scale(1.02);
+		opacity: 1;
+	}
+}
+
+.animate-brain-pulse {
+	animation: brain-pulse 4s ease-in-out infinite;
+}
+
+.animate-float-node-1 { animation: brain-float 5s ease-in-out infinite; }
+.animate-float-node-2 { animation: brain-float 6s ease-in-out infinite 0.8s; }
+.animate-float-node-3 { animation: brain-float 5.5s ease-in-out infinite 1.5s; }
+.animate-float-node-4 { animation: brain-float 6.5s ease-in-out infinite 2.2s; }
+.animate-float-node-5 { animation: brain-float 4.8s ease-in-out infinite 3s; }
+.animate-float-node-6 { animation: brain-float 5.8s ease-in-out infinite 3.7s; }

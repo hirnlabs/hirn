@@ -1,0 +1,79 @@
+<!-- ThemeToggle.astro -->
+<button
+  id="theme-toggle"
+  class="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface text-secondary transition-all hover:border-accent hover:text-accent focus:outline-none"
+  aria-label="Toggle theme"
+>
+  <!-- Sun Icon (visible in dark mode) -->
+  <svg
+    id="theme-toggle-light-icon"
+    class="hidden h-4.5 w-4.5"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2"></path>
+    <path d="M12 20v2"></path>
+    <path d="M4.93 4.93l1.41 1.41"></path>
+    <path d="M17.66 17.66l1.41 1.41"></path>
+    <path d="M2 12h2"></path>
+    <path d="M20 12h2"></path>
+    <path d="M6.34 17.66l-1.41 1.41"></path>
+    <path d="M19.07 4.93l-1.41 1.41"></path>
+  </svg>
+  
+  <!-- Moon Icon (visible in light mode) -->
+  <svg
+    id="theme-toggle-dark-icon"
+    class="hidden h-4.5 w-4.5"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+  </svg>
+</button>
+
+<script>
+  const themeToggle = document.getElementById('theme-toggle');
+  const lightIcon = document.getElementById('theme-toggle-light-icon');
+  const darkIcon = document.getElementById('theme-toggle-dark-icon');
+
+  function getTheme() {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+      return localStorage.getItem('theme') || 'light';
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function updateIcons(theme: string) {
+    if (theme === 'dark') {
+      lightIcon?.classList.remove('hidden');
+      darkIcon?.classList.add('hidden');
+    } else {
+      lightIcon?.classList.add('hidden');
+      darkIcon?.classList.remove('hidden');
+    }
+  }
+
+  // Set initial icon states
+  const initialTheme = document.documentElement.getAttribute('data-theme') || getTheme();
+  updateIcons(initialTheme);
+
+  // Set up event listener
+  themeToggle?.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    updateIcons(nextTheme);
+  });
+</script>

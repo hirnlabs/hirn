@@ -1,0 +1,270 @@
+---
+import Layout from "../components/Layout.astro";
+import WaitlistForm from "../components/WaitlistForm.astro";
+import BrainVisual from "../components/BrainVisual.astro";
+---
+
+<Layout title="hirn — An assistant you actually own" description="hirn is a modular, private, and distributed local system for agents that you own and control. Built on top of the pi framework.">
+
+	<!-- Hero Section: Clean Centered Layout -->
+	<div class="wrap">
+		<section class="flex flex-col gap-10 pb-10 pt-12 sm:gap-12 sm:pb-12 sm:pt-16 items-center text-center">
+
+			<!-- Architecture image with inline video overlay -->
+			<div class="group relative mx-auto w-full max-w-[760px] aspect-video rounded-[24px] overflow-hidden border border-border bg-[#c9c9c9] p-2 shadow-xl">
+				<img id="hero-img" src="/assets/hirn_architecture.jpg" alt="hirn architecture: local model server, model router, and desktop agent" class="w-full h-full object-contain rounded-[18px] bg-[#c9c9c9]" />
+
+				<!-- Video scrim overlay -->
+				<div class="absolute inset-2 rounded-[18px] bg-black/0 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none"></div>
+
+				<!-- Play button overlay -->
+				<button id="play-btn" class="absolute inset-0 flex flex-col gap-3 w-full cursor-pointer items-center justify-center border-0 bg-transparent" aria-label="Play demo video">
+					<!-- Pulsing glow circle -->
+					<div class="relative flex h-18 w-18 items-center justify-center rounded-full bg-white/95 text-accent shadow-2xl transition-all duration-300 group-hover:scale-110 group-hover:bg-accent group-hover:text-white">
+						<span class="absolute -inset-3 rounded-full bg-white/30 dark:bg-white/10 animate-slow-pulse group-hover:bg-accent/20"></span>
+						<svg class="ml-1.5 h-7 w-7 transition-colors" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M8 5v14l11-7z"></path>
+						</svg>
+					</div>
+					<!-- Watch Demo badge -->
+					<span class="font-mono text-[0.625rem] font-bold text-secondary uppercase tracking-widest group-hover:text-accent transition-colors duration-300">
+						Watch Demo Video
+					</span>
+				</button>
+				<!-- Inline video (hidden until play is clicked) -->
+				<iframe id="hero-video" src="about:blank" data-src="https://share.descript.com/embed/nK78GD2h1rj" class="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] rounded-[18px]" style="display:none" frameborder="0" allowfullscreen></iframe>
+			</div>
+
+			<!-- Hero Content -->
+			<div class="w-full max-w-[720px] space-y-6">
+				<p class="font-mono text-xs font-bold uppercase tracking-widest text-accent">An assistant you actually own.</p>
+				<h1 class="text-[clamp(2.25rem,6vw,3.75rem)] leading-[1.05] font-extrabold tracking-tight">
+					Modular. Private. Yours.
+				</h1>
+				<p class="text-secondary text-lg leading-[1.7] max-w-[620px] mx-auto">
+					hirn as a composable agent system that you own and control. </br>
+					Speak or type to automate your daily workflows.
+				    By default every app, model execution, and learning loop runs 100% locally.
+				</p>
+				<WaitlistForm class="mx-auto" />
+			</div>
+
+
+		</section>
+	</div>
+
+	<!-- Component Showcase / Cards Grid -->
+	<section class="border-t border-border bg-surface/20 py-12 transition-colors duration-300">
+		<div class="wrap">
+			<div class="mb-16 flex flex-col md:flex-row items-center gap-12">
+				<div class="flex-1">
+					<p class="mb-4 font-mono text-xs font-bold uppercase tracking-widest text-secondary">System Layout</p>
+					<h2 class="text-[clamp(1.75rem,3.5vw,2.5rem)] font-bold tracking-tight mb-4">The 6 pillars of hirn</h2>
+					<p class="max-w-[620px] leading-[1.7] text-secondary text-[1.125rem]">
+						Each component acts as an independent service in the system, communicating locally to form a highly optimized personal intelligence node.
+					</p>
+				</div>
+				<div class="flex-1 w-full flex justify-end">
+					<BrainVisual />
+				</div>
+			</div>
+
+			<!-- Cards Grid -->
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<!-- Router Card -->
+				<a href="/router" class="group block p-6 transition-all duration-300 hover:-translate-y-1">
+					<div class="flex items-center justify-between mb-4">
+							<svg class="h-[1.125rem] w-[1.125rem]" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+								<path d="M8 20V5" />
+								<path d="M5 8l3-3 3 3" />
+								<path d="M8 15c4 0 8-2 8-5V5" />
+								<path d="M13 8l3-3 3 3" />
+							</svg>
+					</div>
+					<h3 class="text-lg font-bold group-hover:text-accent transition-colors mb-2">router</h3>
+					<p class="text-sm text-secondary leading-relaxed mb-4">
+						Intelligently routes prompts to the best available local model based on task difficulty and hardware limits.
+					</p>
+					<span class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+						Explore router &rarr;
+					</span>
+				</a>
+
+				<!-- Agent Card -->
+				<a href="/agent" class="group block p-6 transition-all duration-300 hover:-translate-y-1">
+					<div class="flex items-center justify-between mb-4">
+						<svg class="h-4 w-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" /></svg>
+					</div>
+					<h3 class="text-lg font-bold group-hover:text-accent transition-colors mb-2">agent</h3>
+					<p class="text-sm text-secondary leading-relaxed mb-4">
+						CLI personal agent orchestrating system actions using the Agent Control Protocol (ACP), powered by the pi framework.
+					</p>
+					<span class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+						Explore agent &rarr;
+					</span>
+				</a>
+
+				<!-- Learn Card -->
+				<a href="/learn" class="group block p-6 transition-all duration-300 hover:-translate-y-1">
+					<div class="flex items-center justify-between mb-4">
+						<svg class="h-[1.125rem] w-[1.125rem]" fill="currentColor" viewBox="0 -960 960 960">
+							<path d="M240-80v-172q-57-52-88.5-121.5T120-520q0-150 105-255t255-105q125 0 221.5 73.5T827-615l52 205q5 19-7 34.5T840-360h-80v120q0 33-23.5 56.5T680-160h-80v80h-80v-160h160v-200h108l-38-155q-23-91-98-148t-172-57q-116 0-198 81t-82 197q0 60 24.5 114t69.5 96l26 24v208h-80Zm254-360Zm-54 80h80l6-50q8-3 14.5-7t11.5-9l46 20 40-68-40-30q2-8 2-16t-2-16l40-30-40-68-46 20q-5-5-11.5-9t-14.5-7l-6-50h-80l-6 50q-8 3-14.5 7t-11.5 9l-46-20-40 68 40 30q-2 8-2 16t2 16l-40 30 40 68 46-20q5 5 11.5 9t14.5 7l6 50Zm-2.5-117.5Q420-495 420-520t17.5-42.5Q455-580 480-580t42.5 17.5Q540-545 540-520t-17.5 42.5Q505-460 480-460t-42.5-17.5Z"/>
+						</svg>
+					</div>
+					<h3 class="text-lg font-bold group-hover:text-accent transition-colors mb-2">learn</h3>
+					<p class="text-sm text-secondary leading-relaxed mb-4">
+						Local feedback and model fine-tuning classifier. Learns from your usage history to continuously optimize routing accuracy.
+					</p>
+					<span class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+						Explore learn &rarr;
+					</span>
+				</a>
+
+				<!-- Server Card -->
+				<a href="/server" class="group block p-6 transition-all duration-300 hover:-translate-y-1">
+					<div class="flex items-center justify-between mb-4">
+						<svg class="h-4 w-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm-3-6h.008v.008h-.008v-.008z" /></svg>
+					</div>
+					<h3 class="text-lg font-bold group-hover:text-accent transition-colors mb-2">server</h3>
+					<p class="text-sm text-secondary leading-relaxed mb-4">
+						RPC model host providing unified, zero-overhead access to backends like llama.cpp, vLLM, and distributed networks.
+					</p>
+					<span class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+						Explore server &rarr;
+					</span>
+				</a>
+
+				<!-- UI Card -->
+				<a href="/ui" class="group block p-6 transition-all duration-300 hover:-translate-y-1">
+					<div class="flex items-center justify-between mb-4">
+						<svg class="h-[1.125rem] w-[1.125rem]" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+							<path d="M12 22v-3" />
+							<path d="M12 19c-3 0-6-3-6-9 0-4 3-7 6-8 3 1 6 4 6 8 0 6-3 9-6 9z" />
+							<path d="M12 19c-1.5-2-2.5-4-2.5-7 0-2 .5-4 2.5-6 2 2 2.5 4 2.5 6 0 3-1 5-2.5 7z" />
+						</svg>
+					</div>
+					<h3 class="text-lg font-bold group-hover:text-accent transition-colors mb-2">ui</h3>
+					<p class="text-sm text-secondary leading-relaxed mb-4">
+						The application ecosystem. Build custom integrated web applets with their own UI and logic, running offline via a bidirectional SDK.
+					</p>
+					<span class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+						Explore ui &rarr;
+					</span>
+				</a>
+
+				<!-- Transcribe Card -->
+				<a href="/transcribe" class="group block p-6 transition-all duration-300 hover:-translate-y-1">
+					<div class="flex items-center justify-between mb-4">
+						<svg class="h-4 w-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" /></svg>
+					</div>
+					<h3 class="text-lg font-bold group-hover:text-accent transition-colors mb-2">transcribe</h3>
+					<p class="text-sm text-secondary leading-relaxed mb-4">
+						Local transcription router. Translates audio inputs using local Whisper instances and pipes text straight to the router.
+					</p>
+					<span class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+						Explore transcribe &rarr;
+					</span>
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Developer Section -->
+	<div class="wrap">
+		<section class="border-t border-border py-12">
+			<p class="mb-4 font-mono text-xs font-bold uppercase tracking-wider text-secondary">For Developers</p>
+			<h2 class="text-[clamp(1.75rem,3.5vw,2.5rem)] font-bold tracking-tight mb-4">
+				Ship nothing to the cloud.
+			</h2>
+			<p class="max-w-[620px] leading-[1.7] text-secondary text-[1.125rem]">
+				Develop a web applet, plug it into hirn's ecosystem, and forget about everything else. No servers, no deployment pipelines, no cloud bills.
+			</p>
+
+			<div class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
+				<div class="space-y-2">
+					<p class="font-mono text-xs font-bold uppercase tracking-wider text-weak">Zero infrastructure</p>
+					<h3 class="text-base font-bold">No servers to run</h3>
+					<p class="text-sm text-secondary leading-relaxed">
+						Applets run on the user's device. No backend to operate, no database to secure, no rate limits to manage.
+					</p>
+				</div>
+
+				<div class="space-y-2">
+					<p class="font-mono text-xs font-bold uppercase tracking-wider text-weak">Custom interface</p>
+					<h3 class="text-base font-bold">Your own UI</h3>
+					<p class="text-sm text-secondary leading-relaxed">
+						Ship a full HTML and JS interface that opens inside hirn using a bidirectional, real-time, fully offline SDK.
+					</p>
+				</div>
+
+				<div class="space-y-2">
+					<p class="font-mono text-xs font-bold uppercase tracking-wider text-weak">Ecosystem</p>
+					<h3 class="text-base font-bold">Plug in, not build out</h3>
+					<p class="text-sm text-secondary leading-relaxed">
+						Focus on what your skill actually does. Deployment, security, and data infrastructure are not a worry.
+					</p>
+				</div>
+			</div>
+
+			<!-- Privacy Guarantee Banner -->
+			<div class="mt-16 rounded-[24px] bg-primary p-8 text-white dark:bg-zinc-900 border border-zinc-800 shadow-xl transition-all duration-300">
+				<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+					<p class="max-w-[700px] text-[clamp(1.125rem,2.2vw,1.375rem)] font-medium leading-[1.6] opacity-95">
+						<strong class="font-extrabold text-white opacity-100">Everything stays on your local hardware.</strong>
+						No corporate telemetry, no data collection, no exceptions. Not now, not ever. Your data, your models, your decisions.
+					</p>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<!-- Waitlist CTA Section -->
+	<div class="wrap" id="waitlist">
+		<section class="border-t border-border py-12">			<p class="mb-4 font-mono text-xs font-bold uppercase tracking-wider text-secondary">Join the journey</p>
+			<h2 class="text-[clamp(1.75rem,3.5vw,2.5rem)] font-bold tracking-tight mb-4">Be the first to run hirn.</h2>
+			<p class="max-w-[620px] leading-[1.7] text-secondary text-[1.125rem] mb-8">
+				We are building a truly open, sovereign system. Sign up to get early developer releases and shape how hirn evolves.
+			</p>
+			<div class="flex max-w-[480px]">
+				<WaitlistForm />
+			</div>
+
+			<div class="pt-10 flex flex-wrap gap-4">
+				<a class="inline-flex items-center gap-1.5 font-mono text-xs text-weak transition-colors hover:text-accent" href="https://github.com/focccus-dev" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+					<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.92.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg>
+					GitHub
+				</a>
+				<a class="inline-flex items-center gap-1.5 font-mono text-xs text-weak transition-colors hover:text-accent" href="https://www.linkedin.com/company/focccus-dev" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+					<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg>
+					LinkedIn
+				</a>
+				<a class="inline-flex items-center gap-1.5 font-mono text-xs text-weak transition-colors hover:text-accent" href="https://www.youtube.com/@focccusdev" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+					<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg>
+					YouTube
+				</a>
+				<a class="inline-flex items-center gap-1.5 font-mono text-xs text-weak transition-colors hover:text-accent" href="mailto:focccus@proton.me" aria-label="Email">
+					<svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"></path></svg>
+					Email
+				</a>
+			</div>
+		</section>
+	</div>
+
+	<!-- Script to control Video overlay -->
+	<script>
+		const playBtn = document.getElementById("play-btn");
+		const heroImg = document.getElementById("hero-img");
+		const heroVideo = document.getElementById("hero-video") as HTMLIFrameElement | null;
+
+		if (playBtn && heroImg && heroVideo) {
+			playBtn.addEventListener("click", () => {
+				playBtn.style.display = "none";
+				heroImg.style.visibility = "hidden";
+				if (heroVideo.dataset.src) {
+					heroVideo.src = heroVideo.dataset.src;
+				}
+				heroVideo.style.display = "block";
+			});
+		}
+	</script>
+</Layout>

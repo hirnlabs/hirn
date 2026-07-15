@@ -1,0 +1,83 @@
+---
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="learn — hirn" description="Local finetuning loop for your personal router.">
+  <div class="wrap py-12">
+    <a href="/" class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
+      <svg class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+      </svg>
+      Back to system overview
+    </a>
+
+    <section class="mb-12 border-b border-border pb-10">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-bg">
+          <svg class="h-6 w-6" fill="currentColor" viewBox="0 -960 960 960">
+            <path d="M240-80v-172q-57-52-88.5-121.5T120-520q0-150 105-255t255-105q125 0 221.5 73.5T827-615l52 205q5 19-7 34.5T840-360h-80v120q0 33-23.5 56.5T680-160h-80v80h-80v-160h160v-200h108l-38-155q-23-91-98-148t-172-57q-116 0-198 81t-82 197q0 60 24.5 114t69.5 96l26 24v208h-80Zm254-360Zm-54 80h80l6-50q8-3 14.5-7t11.5-9l46 20 40-68-40-30q2-8 2-16t-2-16l40-30-40-68-46 20q-5-5-11.5-9t-14.5-7l-6-50h-80l-6 50q-8 3-14.5 7t-11.5 9l-46-20-40 68 40 30q-2 8-2 16t2 16l-40 30 40 68 46-20q5 5 11.5 9t14.5 7l6 50Zm-2.5-117.5Q420-495 420-520t17.5-42.5Q455-580 480-580t42.5 17.5Q540-545 540-520t-17.5 42.5Q505-460 480-460t-42.5-17.5Z"/>
+          </svg>
+        </div>
+        <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">learn</h1>
+      </div>
+      <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
+        Your router shouldn't use generic rules; it should learn your specific workflow. <strong>hirn_learn</strong> provides the tooling to collect, label, and finetune your local classifier.
+      </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-10 order-2 md:order-1">
+        
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Data Collection</h2>
+          <p class="text-secondary leading-relaxed">
+            As you work, the router silently logs every interaction locally. These logs are stored strictly on your local disk at <code class="font-mono text-sm px-1 bg-surface border border-border rounded">~/.hirn/logs/</code> and are never uploaded anywhere.
+          </p>
+          <div class="mt-4 rounded-xl border border-border overflow-hidden">
+            <div class="bg-surface/50 border-b border-border px-4 py-2 flex items-center justify-between">
+              <span class="font-mono text-xs text-secondary">~/.hirn/logs/history.jsonl</span>
+              <span class="font-mono text-[0.6rem] uppercase tracking-wider text-green-600 border border-green-600/30 bg-green-600/10 px-2 py-0.5 rounded">Local Only</span>
+            </div>
+            <pre is:raw class="p-4 text-sm font-mono overflow-x-auto bg-surface"><code>{"input": "Refactor data layer", "intent": "coding", "files": 12, "chosen_model": "gemini-3.5-flash"}
+{"input": "Debug memory leak", "intent": "debugging", "files": 3, "chosen_model": "fable-5"}</code></pre>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">The Training Loop</h2>
+          <p class="text-secondary leading-relaxed">
+            Using a function-calling optimized tiny model like <strong>Needle</strong>, you can quickly adjust the router's behavior to match your personal preferences. 
+          </p>
+          <p class="text-secondary leading-relaxed">
+            Fire up the local <strong>hirn UI</strong> to review your historical logs, override misroutes (e.g. telling the router that specific types of PR reviews should always use Fable 5), and build a high-quality personal dataset.
+          </p>
+          <p class="text-secondary leading-relaxed">
+            Once you have a curated dataset, a one-click finetuning process teaches Needle to map your specific inputs to the correct routing function call, continuously optimizing your token spend and latency over time.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="space-y-4 order-1 md:order-2">
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Continuous Learning</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            The more you use hirn, the smarter the router gets at predicting exactly how much compute your specific prompts require.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Privacy First</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            All finetuning data stays locally on your disk. You never leak your prompts, preferences, or codebase to external endpoints.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">One-Click Finetune</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Quickly train your classifier natively in the UI with a single click, instantly deploying the updated model weights locally.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

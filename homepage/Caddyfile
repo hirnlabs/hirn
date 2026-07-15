@@ -1,0 +1,19 @@
+# Direct translation of nginx.conf for Caddy
+# Replace :80 with your domain (e.g., your-domain.com) to enable automatic SSL/HTTPS
+:80 {
+    # Set the root directory where the static files are located
+    root * /usr/share/nginx/html
+
+    # Enable compression
+    encode gzip
+
+    # Serve static files
+    file_server
+
+    # Fallback to check file, directory, or return 404
+    try_files {path} {path}/ =404
+
+    # Cache static assets for 30 days
+    @static path_regexp static \.(?:css|js|mjs|map|json|svg|ico|png|jpg|jpeg|gif|webp|avif|woff2?)$
+    header @static Cache-Control "public, max-age=2592000, immutable"
+}

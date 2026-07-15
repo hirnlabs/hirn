@@ -1,0 +1,195 @@
+<!-- BrainVisual.astro -->
+<div class="relative aspect-square w-full max-w-[320px] mx-auto my-4 flex items-center justify-center select-none">
+  
+  <!-- Background Connecting Lines SVG -->
+  <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full pointer-events-none">
+    <!-- Tech/orbital guide lines -->
+    <circle cx="50" cy="50" r="28" fill="none" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3 3" class="opacity-45" />
+    <circle cx="50" cy="50" r="41" fill="none" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="6 6" class="opacity-30" />
+    
+    <!-- Central pulse effect background removed to maintain strictly flat design -->
+
+    <!-- Connecting lines to component nodes -->
+    <line id="line-router" x1="50" y1="50" x2="10" y2="10" stroke="var(--color-border)" stroke-width="1" class="transition-all duration-300 opacity-40 dark:opacity-30" />
+    <line id="line-agent" x1="50" y1="50" x2="90" y2="10" stroke="var(--color-border)" stroke-width="1" class="transition-all duration-300 opacity-40 dark:opacity-30" />
+    <line id="line-learn" x1="50" y1="50" x2="5" y2="50" stroke="var(--color-border)" stroke-width="1" class="transition-all duration-300 opacity-40 dark:opacity-30" />
+    <line id="line-server" x1="50" y1="50" x2="95" y2="50" stroke="var(--color-border)" stroke-width="1" class="transition-all duration-300 opacity-40 dark:opacity-30" />
+    <line id="line-ui" x1="50" y1="50" x2="10" y2="90" stroke="var(--color-border)" stroke-width="1" class="transition-all duration-300 opacity-40 dark:opacity-30" />
+    <line id="line-transcribe" x1="50" y1="50" x2="90" y2="90" stroke="var(--color-border)" stroke-width="1" class="transition-all duration-300 opacity-40 dark:opacity-30" />
+  </svg>
+
+  <div class="relative z-10 p-5 bg-bg rounded-full transition-all duration-500 hover:scale-105 group/brain">
+    <svg class="h-20 w-20 relative z-10 animate-brain-pulse text-accent" fill="currentColor" viewBox="0 -960 960 960">
+      <path d="M240-80v-172q-57-52-88.5-121.5T120-520q0-150 105-255t255-105q125 0 221.5 73.5T827-615l52 205q5 19-7 34.5T840-360h-80v120q0 33-23.5 56.5T680-160h-80v80h-80v-160h160v-200h108l-38-155q-23-91-98-148t-172-57q-116 0-198 81t-82 197q0 60 24.5 114t69.5 96l26 24v208h-80Zm254-360Zm-54 80h80l6-50q8-3 14.5-7t11.5-9l46 20 40-68-40-30q2-8 2-16t-2-16l40-30-40-68-46 20q-5-5-11.5-9t-14.5-7l-6-50h-80l-6 50q-8 3-14.5 7t-11.5 9l-46-20-40 68 40 30q-2 8-2 16t2 16l-40 30 40 68 46-20q5 5 11.5 9t14.5 7l6 50Zm-2.5-117.5Q420-495 420-520t17.5-42.5Q455-580 480-580t42.5 17.5Q540-545 540-520t-17.5 42.5Q505-460 480-460t-42.5-17.5Z"/>
+    </svg>
+  </div>
+
+  <!-- Interactive Orbiting Component Nodes -->
+  
+  <!-- Router Node (Top-Left) -->
+  <div
+    class="absolute z-20 group"
+    style="left: 10%; top: 10%; transform: translate(-50%, -50%);"
+  >
+    <a
+      href="/router"
+      id="node-router"
+      class="flex flex-col items-center gap-1 transition-all duration-300 hover:scale-110 hover:text-accent animate-float-node-1 text-secondary group-hover:text-primary"
+    >
+      <div class="bg-bg rounded-full p-2 relative z-20 border border-border/10">
+        <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+        </svg>
+      </div>
+      <span class="font-mono text-xs font-bold tracking-wider transition-colors">router</span>
+    </a>
+    <!-- Hover Tooltip -->
+    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 text-center text-[0.6875rem] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-30 font-sans leading-normal font-medium">
+      Intelligent model selection and thinking effort routing.
+    </div>
+  </div>
+
+  <!-- Agent Node (Top-Right) -->
+  <div
+    class="absolute z-20 group"
+    style="left: 90%; top: 10%; transform: translate(-50%, -50%);"
+  >
+    <a
+      href="/agent"
+      id="node-agent"
+      class="flex flex-col items-center gap-1 transition-all duration-300 hover:scale-110 hover:text-accent animate-float-node-2 text-secondary group-hover:text-primary"
+    >
+      <div class="bg-bg rounded-full p-2 relative z-20 border border-border/10">
+        <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+        </svg>
+      </div>
+      <span class="font-mono text-xs font-bold tracking-wider transition-colors">agent</span>
+    </a>
+    <!-- Hover Tooltip -->
+    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 text-center text-[0.6875rem] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-30 font-sans leading-normal font-medium">
+      Personal assistant built on pi executing sandboxed actions.
+    </div>
+  </div>
+
+  <!-- Learn Node (Center-Left) -->
+  <div
+    class="absolute z-20 group"
+    style="left: 5%; top: 50%; transform: translate(-50%, -50%);"
+  >
+    <a
+      href="/learn"
+      id="node-learn"
+      class="flex flex-col items-center gap-1 transition-all duration-300 hover:scale-110 hover:text-accent animate-float-node-3 text-secondary group-hover:text-primary"
+    >
+      <div class="bg-bg rounded-full p-2 relative z-20 border border-border/10">
+        <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+        </svg>
+      </div>
+      <span class="font-mono text-xs font-bold tracking-wider transition-colors">learn</span>
+    </a>
+    <!-- Hover Tooltip -->
+    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 text-center text-[0.6875rem] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-30 font-sans leading-normal font-medium">
+      Local model and routing fine-tuning from usage logs.
+    </div>
+  </div>
+
+  <!-- Server Node (Center-Right) -->
+  <div
+    class="absolute z-20 group"
+    style="left: 95%; top: 50%; transform: translate(-50%, -50%);"
+  >
+    <a
+      href="/server"
+      id="node-server"
+      class="flex flex-col items-center gap-1 transition-all duration-300 hover:scale-110 hover:text-accent animate-float-node-4 text-secondary group-hover:text-primary"
+    >
+      <div class="bg-bg rounded-full p-2 relative z-20 border border-border/10">
+        <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm-3-6h.008v.008h-.008v-.008z" />
+        </svg>
+      </div>
+      <span class="font-mono text-xs font-bold tracking-wider transition-colors">server</span>
+    </a>
+    <!-- Hover Tooltip -->
+    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 text-center text-[0.6875rem] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-30 font-sans leading-normal font-medium">
+      Drop-in OpenAI compatible local server API.
+    </div>
+  </div>
+
+  <!-- UI Node (Bottom-Left) -->
+  <div
+    class="absolute z-20 group"
+    style="left: 10%; top: 90%; transform: translate(-50%, -50%);"
+  >
+    <a
+      href="/ui"
+      id="node-ui"
+      class="flex flex-col items-center gap-1 transition-all duration-300 hover:scale-110 hover:text-accent animate-float-node-5 text-secondary group-hover:text-primary"
+    >
+      <div class="bg-bg rounded-full p-2 relative z-20 border border-border/10">
+        <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21m0 0l-.813-5.096L9 21zm0 0h1m-1 0H8m5-11H9a4 4 0 00-4 4v7a4 4 0 004 4h4a4 4 0 004-4v-7a4 4 0 00-4-4z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 11v1m6-1v1" />
+        </svg>
+      </div>
+      <span class="font-mono text-xs font-bold tracking-wider transition-colors">ui</span>
+    </a>
+    <!-- Hover Tooltip -->
+    <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 text-center text-[0.6875rem] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-30 font-sans leading-normal font-medium">
+      Web dashboard to interact with the agent and inspect training.
+    </div>
+  </div>
+
+  <!-- Transcribe Node (Bottom-Right) -->
+  <div
+    class="absolute z-20 group"
+    style="left: 90%; top: 90%; transform: translate(-50%, -50%);"
+  >
+    <a
+      href="/transcribe"
+      id="node-transcribe"
+      class="flex flex-col items-center gap-1 transition-all duration-300 hover:scale-110 hover:text-accent animate-float-node-6 text-secondary group-hover:text-primary"
+    >
+      <div class="bg-bg rounded-full p-2 relative z-20 border border-border/10">
+        <svg class="h-6 w-6 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+        </svg>
+      </div>
+      <span class="font-mono text-xs font-bold tracking-wider transition-colors">transcribe</span>
+    </a>
+    <!-- Hover Tooltip -->
+    <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 text-center text-[0.6875rem] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-30 font-sans leading-normal font-medium">
+      Local audio routing and translation through Whisper.
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Highlight connection lines on node hover
+  const nodes = [
+    { id: 'node-router', lineId: 'line-router', color: 'var(--color-accent)' },
+    { id: 'node-agent', lineId: 'line-agent', color: 'var(--color-accent)' },
+    { id: 'node-learn', lineId: 'line-learn', color: 'var(--color-accent)' },
+    { id: 'node-server', lineId: 'line-server', color: 'var(--color-accent)' },
+    { id: 'node-ui', lineId: 'line-ui', color: 'var(--color-accent)' },
+    { id: 'node-transcribe', lineId: 'line-transcribe', color: 'var(--color-accent)' },
+  ];
+
+  nodes.forEach(node => {
+    const el = document.getElementById(node.id);
+    const line = document.getElementById(node.lineId);
+    if (el && line) {
+      el.addEventListener('mouseenter', () => {
+        line.setAttribute('stroke', node.color);
+        line.style.opacity = '1';
+      });
+      el.addEventListener('mouseleave', () => {
+        line.setAttribute('stroke', 'var(--color-border)');
+        line.style.opacity = '0.4';
+      });
+    }
+  });
+</script>

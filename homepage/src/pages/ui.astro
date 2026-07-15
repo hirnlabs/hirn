@@ -1,0 +1,71 @@
+---
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="ui — hirn" description="The local web channels and skill ecosystem.">
+  <div class="wrap py-12">
+    <a href="/" class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
+      <svg class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+      </svg>
+      Back to system overview
+    </a>
+
+    <section class="mb-12 border-b border-border pb-10">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-bg">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M12 22v-3" />
+            <path d="M12 19c-3 0-6-3-6-9 0-4 3-7 6-8 3 1 6 4 6 8 0 6-3 9-6 9z" />
+            <path d="M12 19c-1.5-2-2.5-4-2.5-7 0-2 .5-4 2.5-6 2 2 2.5 4 2.5 6 0 3-1 5-2.5 7z" />
+          </svg>
+        </div>
+        <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">ui</h1>
+      </div>
+      <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
+        The application ecosystem. Build custom integrated web applets with their own logic and interface, running entirely offline via a bidirectional SDK.
+      </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-10 order-2 md:order-1">
+        
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Your own custom UI</h2>
+          <p class="text-secondary leading-relaxed">
+            Each integrated web applet ships a custom HTML and JS interface that connects to your data over local web channels. You have full control over the interaction without ever leaving the host environment.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Zero infrastructure required</h2>
+          <p class="text-secondary leading-relaxed">
+            Write an integrated web applet, plug it into the ecosystem, and forget about everything else. There are no servers to run, no deployment pipelines, and no rate limits to manage. It's just code executing securely on the user's device.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="space-y-4 order-1 md:order-2">
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Absolute Privacy</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Everything stays on the device. No personalized telemetry, no data collection, no exceptions. Your data never leaves your devices.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Offline Ready</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            The entire UI ecosystem is built to function fully offline. Your local dashboard never requires an active internet connection.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Instant Load</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Served directly from your machine's memory, the interface loads instantly with absolutely zero network latency.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

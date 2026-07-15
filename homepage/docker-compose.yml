@@ -1,0 +1,11 @@
+services:
+    :
+        build:
+            context: .
+            args:
+                SITE_URL: ${SITE_URL:-https://example.com}
+        image: hirn-homepage:latest
+        container_name: hirn-homepage
+        restart: unless-stopped
+        ports:
+            - "80:80"

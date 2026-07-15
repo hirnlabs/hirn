@@ -1,0 +1,121 @@
+---
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="router — hirn" description="Intelligent local LLM routing and cost optimization.">
+  <div class="wrap py-12">
+    <a href="/" class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
+      <svg class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+      </svg>
+      Back to system overview
+    </a>
+
+    <section class="mb-12 border-b border-border pb-10">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-bg">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M8 20V5" />
+            <path d="M5 8l3-3 3 3" />
+            <path d="M8 15c4 0 8-2 8-5V5" />
+            <path d="M13 8l3-3 3 3" />
+          </svg>
+        </div>
+        <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">router</h1>
+      </div>
+      <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
+        An intelligent, cost-saving local gateway. It sits transparently behind your Pi or Claude Code client. You keep your standard Pro subscriptions; the router decides which one to use per turn.
+      </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-10 order-2 md:order-1">
+        
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">The Problem: Opaque Pricing & Token Limits</h2>
+          <p class="text-secondary leading-relaxed">
+            Frontier models are expensive. For example, Claude Fable 5 costs $10/1M input and $50/1M output. Running large codebases through it burns through your limits and credits instantly, even for simple formatting or refactoring tasks that don't require immense reasoning.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">The Solution: Classifier Routing Architecture</h2>
+          <p class="text-secondary leading-relaxed">
+            Instead of routing everything to a frontier model, <strong>hirn_router</strong> uses a multi-step pipeline to evaluate, select, and execute the optimal model for each turn.
+          </p>
+          <ul class="space-y-4 mt-4">
+            <li class="flex gap-4 p-5 border border-border rounded-xl">
+              <span class="font-mono text-sm font-bold text-primary mt-1">01</span>
+              <div>
+                <strong class="block text-lg">Lightweight classifier (effort/tier)</strong>
+                <p class="text-secondary mt-1">Receives the input, task features, and coarse budget descriptors. It evaluates these metrics and outputs a target model tier (e.g., extreme, high, medium, light, super_light).</p>
+              </div>
+            </li>
+            <li class="flex gap-4 p-5 border border-border rounded-xl">
+              <span class="font-mono text-sm font-bold text-primary mt-1">02</span>
+              <div>
+                <strong class="block text-lg">Deterministic selector</strong>
+                <p class="text-secondary mt-1">Reads your user config mapping tiers to candidate models. It applies a scoring function based on latency, quality, cost, and live limits to pick one concrete model ID.</p>
+              </div>
+            </li>
+            <li class="flex gap-4 p-5 border border-border rounded-xl">
+              <span class="font-mono text-sm font-bold text-primary mt-1">03</span>
+              <div>
+                <strong class="block text-lg">Pi executes the chosen model</strong>
+                <p class="text-secondary mt-1">Pi's model registry intercepts the decision and forwards the request to Fable, Opus, Gemini, or a local LLM based entirely on the deterministic routing output.</p>
+              </div>
+            </li>
+            <li class="flex gap-4 p-5 border border-border rounded-xl">
+              <span class="font-mono text-sm font-bold text-primary mt-1">04</span>
+              <div>
+                <strong class="block text-lg">Logging for self-improvement</strong>
+                <p class="text-secondary mt-1">Logs the predicted tier, selection result, manual overrides, response times, and token usage. This data is fed back in to refine the classifier's tier prediction and adjust scoring weights per tier.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">The Math: Weighted Normalized Sum</h2>
+          <p class="text-secondary leading-relaxed">
+            For the deterministic selector, hirn employs a clean, tuneable weighted-sum sorter. For each candidate model in the chosen tier, the router computes a score:
+          </p>
+          <div class="p-5 bg-surface border border-border rounded-xl font-mono text-sm overflow-x-auto text-primary">
+            score = (w_q * Q) - (w_l * L) - (w_c * C) - (w_limit * U)
+          </div>
+          <ul class="space-y-3 mt-4 text-secondary leading-relaxed">
+            <li class="flex items-start gap-2"><strong class="text-primary font-mono text-sm mt-0.5">Q</strong> <span>Normalized quality (e.g., SWE-bench or agent scores).</span></li>
+            <li class="flex items-start gap-2"><strong class="text-primary font-mono text-sm mt-0.5">L</strong> <span>Normalized latency from benchmarks (e.g. Flash vs Pro).</span></li>
+            <li class="flex items-start gap-2"><strong class="text-primary font-mono text-sm mt-0.5">C</strong> <span>Expected marginal cost for the request (tokens × price).</span></li>
+            <li class="flex items-start gap-2"><strong class="text-primary font-mono text-sm mt-0.5">U</strong> <span>Penalty for proximity to API plan and token limits.</span></li>
+          </ul>
+          <p class="text-secondary leading-relaxed mt-4">
+            It sorts by score and picks the top model. It's fully deterministic, transparent, and fast—adding no perceivable overhead to Pi's UX. If you're consistently hitting Claude limits, simply bump <code class="font-mono text-xs text-primary">w_limit</code>. If the model is too slow, bump <code class="font-mono text-xs text-primary">w_l</code>.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="space-y-4 order-1 md:order-2">
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Cost Savings</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            By offloading heavy context tasks to workhorse models, the router cuts API costs by up to 80% while preserving high-tier reasoning.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Zero Latency</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            The ~26M parameter local classifier executes in less than 50ms on device, adding virtually zero overhead to your request pipeline.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Self-Improving</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Local logging feeds directly back into the classifier, automatically refining its predictions over time based on your workflow.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

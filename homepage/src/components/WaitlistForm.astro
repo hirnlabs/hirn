@@ -1,0 +1,43 @@
+---
+interface Props {
+	class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<form class={`flex flex-col sm:flex-row gap-3 w-full max-w-[480px] ${className || ""}`} data-waitlist-form>
+  <input
+    type="email"
+    required
+    placeholder="Enter your email"
+    class="flex-1 px-4 py-[0.8125rem] rounded-xl border border-border bg-surface text-[0.9375rem] text-primary placeholder:text-weak focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all duration-200"
+  />
+  <button
+    type="submit"
+    class="group cursor-pointer rounded-xl bg-accent hover:bg-accent-hover px-6 py-[0.8125rem] text-[0.9375rem] font-semibold whitespace-nowrap text-white dark:text-bg transition-all flex items-center justify-center gap-2"
+  >
+    Join the waitlist
+    <svg class="h-4 w-4 transform transition-transform group-hover:translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+    </svg>
+  </button>
+</form>
+
+<script>
+  // Find all forms with data-waitlist-form attribute on the page
+  const forms = document.querySelectorAll('form[data-waitlist-form]');
+  for (const form of forms) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement | null;
+      if (emailInput) {
+        const email = emailInput.value.trim();
+        if (email) {
+          const subject = encodeURIComponent("Waitlist signup — hirn");
+          const body = encodeURIComponent(`Hi,\n\nI'd like to join the hirn waitlist.\n\nMy email: ${email}`);
+          window.location.href = `mailto:focccus@proton.me?subject=${subject}&body=${body}`;
+        }
+      }
+    });
+  }
+</script>

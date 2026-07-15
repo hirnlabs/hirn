@@ -1,0 +1,67 @@
+---
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="transcribe — hirn" description="Seamless, private voice input for the desktop.">
+  <div class="wrap py-12">
+    <a href="/" class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
+      <svg class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+      </svg>
+      Back to system overview
+    </a>
+
+    <section class="mb-12 border-b border-border pb-10">
+      <div class="flex items-center gap-4 mb-4">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-bg">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" /></svg>
+        </div>
+        <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">transcribe</h1>
+      </div>
+      <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
+        Seamless voice input for the desktop. A local transcription router that converts your speech to text and pipes it directly into the agent.
+      </p>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-10 order-2 md:order-1">
+        
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Fast Local STT</h2>
+          <p class="text-secondary leading-relaxed">
+            By utilizing highly optimized local speech-to-text models like Whisper, <strong>hirn_transcribe</strong> allows you to talk to your desktop agent in real-time. It effortlessly captures complex coding terms, shell commands, and casual requests.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Absolute Privacy Guarantee</h2>
+          <p class="text-secondary leading-relaxed">
+            Unlike cloud dictation services, <strong>your voice never leaves your machine</strong>. Audio is processed completely locally and securely discarded. Only the transcribed text is sent to the LLM as a prompt, ensuring complete privacy over your ambient environment and conversations.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="space-y-4 order-1 md:order-2">
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Always Ready</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Accessible via a global hotkey, letting you instantly drop into a conversation with your agent without needing to switch windows.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Multi-lingual</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Automatically detects your spoken language and seamlessly translates your speech to English code comments when needed.
+          </p>
+        </div>
+        <div class="p-6 border border-border rounded-xl">
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">VAD Optimized</h3>
+          <p class="text-sm text-secondary leading-relaxed">
+            Voice Activity Detection ensures the model only runs when you're actually speaking, saving massive amounts of battery and compute.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

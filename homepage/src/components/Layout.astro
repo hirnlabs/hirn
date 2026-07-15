@@ -1,0 +1,91 @@
+---
+import "../styles/global.css";
+import ThemeToggle from "./ThemeToggle.astro";
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = "hirn - An assistant you actually own.",
+	description = "hirn is a modular, private, and distributed local system for agents that you own and control.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+
+		<!-- Google Fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+		<!-- Inline script to prevent theme flashing on load -->
+		<script is:inline>
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+			document.documentElement.setAttribute('data-theme', theme);
+		</script>
+	</head>
+
+	<body class="bg-bg text-primary transition-colors duration-300">
+		<!-- Header / Nav -->
+		<nav class="bg-bg py-5 sticky top-0 z-50 transition-colors duration-300">
+			<div class="wrap flex items-center justify-between relative px-4">
+				<!-- Left Brand -->
+				<a href="/" class="flex flex-col hover:opacity-80 transition-opacity">
+					<span class="font-mono text-[1.125rem] font-bold tracking-tight leading-none">hirn</span>
+					<span class="font-mono text-[0.55rem] tracking-[0.14em] uppercase text-secondary mt-1">
+						Early Access
+					</span>
+				</a>
+
+				<!-- Centered Links -->
+				<div class="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+					<a href="/router" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">router</a>
+					<a href="/agent" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">agent</a>
+					<a href="/learn" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">learn</a>
+					<a href="/server" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">server</a>
+					<a href="/ui" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">ui</a>
+					<a href="/transcribe" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">transcribe</a>
+				</div>
+
+				<!-- Right Controls -->
+				<div class="flex items-center gap-3">
+					<ThemeToggle />
+				</div>
+			</div>
+		</nav>
+
+		<!-- Main Page Content -->
+		<main>
+			<slot />
+		</main>
+
+		<!-- Footer -->
+		<footer class="border-t border-border py-8 bg-surface/30 transition-colors duration-300 mt-20">
+			<div class="wrap flex flex-wrap items-center justify-between gap-4">
+				<span class="font-mono text-xs text-weak">&copy; 2026 focccus.dev &mdash; hirn</span>
+				<div class="flex gap-4">
+					<a href="/#waitlist" class="font-mono text-xs text-weak hover:text-secondary transition-colors">Waitlist</a>
+					<a href="https://github.com/focccus-dev" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-weak hover:text-secondary transition-colors">GitHub</a>
+				</div>
+			</div>
+		</footer>
+	</body>
+</html>

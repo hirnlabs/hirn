@@ -1,0 +1,86 @@
+name: Deploy
+
+on:
+    push:
+        branches:
+            - hirn_desktop
+
+permissions:
+    contents: read
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Restore build cache
+              id: cache-build
+              uses: actions/cache@v4
+              with:
+                  path: dist/
+                  key: ${{ runner.os }}-build-${{ hashFiles('**/src/**', '**/astro.config.ts', '**/package.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-build-
+
+            - name: Setup Bun
+              if: steps.cache-build.outputs.cache-hit != 'true'
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Setup Node
+              if: steps.cache-build.outputs.cache-hit != 'true'
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Cache Bun dependencies
+              if: steps.cache-build.outputs.cache-hit != 'true'
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
+
+            - name: Install dependencies
+              if: steps.cache-build.outputs.cache-hit != 'true'
+              run: bun install --frozen-lockfile
+
+            - name: Build
+              if: steps.cache-build.outputs.cache-hit != 'true'
+              run: bun run build
+
+            - name: Upload dist artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: dist
+                  path: dist/
+                  retention-days: 1
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        environment: deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/hirn_desktop'
+        steps:
+            - name: Download dist artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: dist
+                  path: dist/
+
+            - name: Deploy to server
+              uses: appleboy/scp-action@master
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  source: "dist/"
+                  target: "/etc/www/hirn-home/"
+                  strip_components: 1
+
+            - name: Deployment notification
+              run: echo "✅ Deployment to Server completed successfully"
