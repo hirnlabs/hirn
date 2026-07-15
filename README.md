@@ -24,34 +24,35 @@ We maintain a three-tier storage model that balances human usability with machin
 
 ## The Pillars
 
-*   **router**: Intelligent local-first gateway. Routes prompts to the optimal model based on task difficulty and hardware capability.
-*   **agent**: Rust-based orchestration engine. Handles complex ACP (Agent Control Protocol) tasks and workflow automation.
-*   **learn**: Local feedback loop. A fine-tuning classifier that optimizes routing accuracy based on your usage patterns.
-*   **server**: RPC-based model host. Orchestrates llama.cpp / vLLM backends, featuring VRAM sharding and load balancing.
-*   **ui**: Extensible application ecosystem. Build modular HTML/JS applets that run offline via a secure, bidirectional SDK.
-*   **transcribe**: Private voice input. Local-first transcription using Whisper, piping text directly to the router.
+- **router**: Intelligent local-first gateway. Routes prompts to the optimal model based on task difficulty and hardware capability.
+- **agent**: Rust-based orchestration engine. Handles complex ACP (Agent Control Protocol) tasks and workflow automation.
+- **learn**: Local feedback loop. A fine-tuning classifier that optimizes routing accuracy based on your usage patterns.
+- **server**: RPC-based model host. Orchestrates llama.cpp / vLLM backends, featuring VRAM sharding and load balancing.
+- **ui**: Extensible application ecosystem. Build modular HTML/JS applets that run offline via a secure, bidirectional SDK.
+- **transcribe**: Private voice input. Local-first transcription using Whisper, piping text directly to the router.
 
 ## For Developers: Ship nothing to the cloud
 
 Develop a tool, plug it into the Hirn ecosystem, and forget about the infrastructure.
 
-*   **Zero Infrastructure**: Applets run on the user's device. No backend to operate, no database to secure.
-*   **Rich SDK**: Your tools access the [Data Layer](data/README.md) (Tier 1-3) directly via TypeScript, gaining native support for persistence, RAG, and collaboration.
-*   **FFI-backed Performance**: Logic runs in a high-performance **Rust Sync Core** shared across Flutter (mobile) and Tauri (desktop).
+- **Zero Infrastructure**: Tools run on the user's device. No backend to operate, no database to secure.
+- **Rich SDK**: Your tools access the **Data Layer** (Tier 1-3) directly via TypeScript, gaining native support for persistence, RAG, collaboration, offline work and encrypted P2P syncronization across network boundaries.
+- **FFI-backed Performance**: Logic runs in a high-performance **Rust Sync Core** shared across Flutter (mobile), Tauri (desktop) and the agent CLI.
 
 ## Module Map
 
-| Module | Description |
-| :--- | :--- |
-| `agent/` | ACP compliant orchestration engine. |
-| `assistant/` | Mobile client (Flutter + Rust) for on-the-go access. |
-| `data/` | Persistence management (File/SQLite/Vector/Graph). |
-| `desktop/` | Tauri-based cross-platform GUI & tool host. |
-| `homepage/` | Web dashboard & documentation portal. |
-| `router/` | Intent classification & model dispatch logic. |
-| `sdk/` | TypeScript SDK for building modular tools. |
-| `server/` | Distributed inference orchestration. |
-| `transcribe/` | Local privacy-first speech-to-text. |
+| Module        | Description                                          |
+| :------------ | :--------------------------------------------------- |
+| `agent/`      | ACP compliant orchestration engine.                  |
+| `assistant/`  | Mobile client (Flutter + Rust) for on-the-go access. |
+| `data/`       | Persistence management (File/SQLite/Vector/Graph).   |
+| `desktop/`    | Tauri-based cross-platform GUI & tool host.          |
+| `homepage/`   | Web dashboard & documentation portal.                |
+| `router/`     | Intent classification & model dispatch logic.        |
+| `sdk/`        | TypeScript SDK for building modular tools.           |
+| `server/`     | Distributed inference orchestration.                 |
+| `transcribe/` | Local privacy-first speech-to-text.                  |
 
 ## License
-Hirn is built for sovereignty. See [LICENSE](LICENSE) for details.
+
+Hirn is built for sovereignty. You are free to use and modify the code for non-commerical use. See [LICENSE](LICENSE) for details.
