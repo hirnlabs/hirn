@@ -41,17 +41,17 @@ Develop a tool, plug it into the Hirn ecosystem, and forget about the infrastruc
 
 ## Module Map
 
-| Module        | Description                                          |
-| :------------ | :--------------------------------------------------- |
-| `agent/`      | ACP compliant orchestration engine.                  |
-| `assistant/`  | Mobile client (Flutter + Rust) for on-the-go access. |
-| `data/`       | Persistence management (File/SQLite/Vector/Graph).   |
-| `desktop/`    | Tauri-based cross-platform GUI & tool host.          |
-| `homepage/`   | Web dashboard & documentation portal.                |
-| `router/`     | Intent classification & model dispatch logic.        |
-| `sdk/`        | TypeScript SDK for building modular tools.           |
-| `server/`     | Distributed inference orchestration.                 |
-| `transcribe/` | Local privacy-first speech-to-text.                  |
+| Module                         | Description                                          |
+| :----------------------------- | :--------------------------------------------------- |
+| [`agent`](./agent)             | ACP compliant orchestration engine.                  |
+| [`assistant`](./assistant)     | Mobile client (Flutter + Rust) for on-the-go access. |
+| [`data`](./data)               | Persistence management (File/SQLite/Vector/Graph).   |
+| [`desktop`](./desktop)         | Tauri-based cross-platform GUI & tool host.          |
+| [`homepage`](./homepage)       | Web dashboard & documentation portal.                |
+| [`router`](./router)           | Intent classification & model dispatch logic.        |
+| [`sdk/`](./sdk/)               | TypeScript SDK for building modular tools.           |
+| [`server/`](./server/)         | Distributed inference orchestration.                 |
+| [`transcribe/`](./transcribe/) | Local privacy-first speech-to-text.                  |
 
 ## License
 
