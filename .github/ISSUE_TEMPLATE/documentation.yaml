@@ -30,6 +30,8 @@ body:
       description: Which language version needs improvement?
       options:
         - English
+        - Deutsch
+        - Svenska
         - 简体中文
         - 日本語
         - All languages

@@ -1,7 +1,7 @@
 <!--
   !!IMPORTANT!!
   Before submitting a Pull Request, please make sure to read and follow the guidelines in CONTRIBUTING.md.
-  https://github.com/focccus/hirnfrei_home/blob/main/CONTRIBUTING.md
+  https://github.com/hirnlabs/hirn/blob/main/CONTRIBUTING.md
 -->
 
 ## Description
