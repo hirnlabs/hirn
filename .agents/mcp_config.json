@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "linear": {
+      "serverUrl": "https://mcp.linear.app/mcp"
+    },
+    "Figma": {
+      "url": "https://mcp.figma.com/mcp"
+    }
+  }
+}

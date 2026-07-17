@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-GitHub Issues. See `docs/agents/issue-tracker.md`.
+Linear. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
