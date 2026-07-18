@@ -5,7 +5,7 @@ This directory contains the Rust wrapper implementation for the [Agent Client Pr
 ## Key Capabilities
 
 - **ACP Integration**: Provides native Rust bindings for the Agent Client Protocol.
-- **Custom Pi Bundle**: Includes a specialized `pi` agent implementation for internal task execution.
+- **Custom Goose Bundle**: Includes a specialized `goose` agent implementation for internal task execution.
 - **Orchestration**: Logic to chain multiple agent steps together.
 - **Plugin System**: Interfaces for extending agent capabilities with custom tools.
 - **Monitoring & Data collection**: Telemetry and logs for agent execution paths and finetuning using hirn learn.
