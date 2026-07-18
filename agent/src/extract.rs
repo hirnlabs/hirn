@@ -24,6 +24,22 @@ pub fn find_goose_binary(dir: &std::path::Path) -> Option<std::path::PathBuf> {
     None
 }
 
+fn remove_file_if_exists(path: &std::path::Path) -> std::io::Result<()> {
+    match fs::remove_file(path) {
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(e),
+    }
+}
+
+fn remove_dir_all_if_exists(path: &std::path::Path) -> std::io::Result<()> {
+    match fs::remove_dir_all(path) {
+        Ok(_) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(e),
+    }
+}
+
 pub fn ensure_goose_extracted() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
     // 1. Get user home directory and define ~/.hirn/bin/
     let home = dirs::home_dir().ok_or("Could not find user home directory")?;
@@ -37,12 +53,12 @@ pub fn ensure_goose_extracted() -> Result<std::path::PathBuf, Box<dyn std::error
 
     // 3. Extract the embedded Goose archive if not present
     if !goose_path.exists() {
-        let _ = fs::remove_file(bin_dir.join(".help_cache"));
-        let _ = fs::remove_file(bin_dir.join(".version_cache"));
+        remove_file_if_exists(&bin_dir.join(".help_cache"))?;
+        remove_file_if_exists(&bin_dir.join(".version_cache"))?;
 
         // Create a temporary directory for extraction
         let temp_extract_dir = bin_dir.join("temp_extract");
-        let _ = fs::remove_dir_all(&temp_extract_dir);
+        remove_dir_all_if_exists(&temp_extract_dir)?;
         fs::create_dir_all(&temp_extract_dir)?;
 
         let is_windows = cfg!(windows);
@@ -84,7 +100,7 @@ pub fn ensure_goose_extracted() -> Result<std::path::PathBuf, Box<dyn std::error
             if !status.success() {
                 return Err("Failed to extract Goose Tarball archive using tar".into());
             }
-            let _ = fs::remove_file(archive_path)?;
+            remove_file_if_exists(&archive_path)?;
         }
 
         // Find the goose/goose.exe binary in the extracted files
@@ -99,12 +115,12 @@ pub fn ensure_goose_extracted() -> Result<std::path::PathBuf, Box<dyn std::error
                 fs::set_permissions(&goose_path, perms)?;
             }
         } else {
-            let _ = fs::remove_dir_all(&temp_extract_dir);
+            let _ = remove_dir_all_if_exists(&temp_extract_dir);
             return Err("Goose binary not found in extracted archive".into());
         }
 
         // Clean up temporary extraction directory
-        let _ = fs::remove_dir_all(&temp_extract_dir);
+        remove_dir_all_if_exists(&temp_extract_dir)?;
     }
 
     Ok(goose_path)

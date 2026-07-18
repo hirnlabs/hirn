@@ -11,7 +11,13 @@ fn main() {
 
     let archive_name = match target_os.as_str() {
         "windows" => "goose-x86_64-pc-windows-msvc.zip",
-        "linux" => "goose-x86_64-unknown-linux-gnu.tar.gz",
+        "linux" => {
+            if target_arch == "aarch64" {
+                "goose-aarch64-unknown-linux-gnu.tar.gz"
+            } else {
+                "goose-x86_64-unknown-linux-gnu.tar.gz"
+            }
+        }
         "macos" => {
             if target_arch == "aarch64" {
                 "goose-aarch64-apple-darwin.tar.gz"
@@ -27,18 +33,10 @@ fn main() {
         let tag = get_latest_tag(&target_os);
         println!("cargo:warning=Detected latest Goose version: {}", tag);
 
-        let url = match target_os.as_str() {
-            "windows" => format!("https://github.com/aaif-goose/goose/releases/download/{}/goose-x86_64-pc-windows-msvc.zip", tag),
-            "linux" => format!("https://github.com/aaif-goose/goose/releases/download/{}/goose-x86_64-unknown-linux-gnu.tar.gz", tag),
-            "macos" => {
-                if target_arch == "aarch64" {
-                    format!("https://github.com/aaif-goose/goose/releases/download/{}/goose-aarch64-apple-darwin.tar.gz", tag)
-                } else {
-                    format!("https://github.com/aaif-goose/goose/releases/download/{}/goose-x86_64-apple-darwin.tar.gz", tag)
-                }
-            }
-            _ => panic!("Unsupported target OS: {}", target_os),
-        };
+        let url = format!(
+            "https://github.com/aaif-goose/goose/releases/download/{}/{}",
+            tag, archive_name
+        );
 
         println!("cargo:warning=Downloading Goose archive from {}...", url);
         

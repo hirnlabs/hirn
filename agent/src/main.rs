@@ -29,6 +29,19 @@ enum Commands {
     },
 }
 
+struct HirnPaths {
+    config_dir: std::path::PathBuf,
+    bin_dir: std::path::PathBuf,
+}
+
+fn get_hirn_paths() -> Result<HirnPaths, &'static str> {
+    let home = dirs::home_dir().ok_or("Could not find user home directory")?;
+    Ok(HirnPaths {
+        config_dir: home.join(".hirn").join("config"),
+        bin_dir: home.join(".hirn").join("bin"),
+    })
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -55,10 +68,14 @@ fn main() {
         println!("Hirn CLI Options & Usage (forwarded to Goose):");
         println!("--------------------------------------------------------------------------------");
 
-        let home = dirs::home_dir().unwrap();
-        let config_dir = home.join(".config").join("hirn");
-        let bin_dir = home.join(".hirn").join("bin");
-        let help_cache_path = bin_dir.join(".help_cache");
+        let paths = match get_hirn_paths() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                process::exit(1);
+            }
+        };
+        let help_cache_path = paths.bin_dir.join(".help_cache");
 
         if help_cache_path.exists() {
             if let Ok(cached_help) = fs::read_to_string(&help_cache_path) {
@@ -71,7 +88,7 @@ fn main() {
         if let Ok(goose_path) = ensure_goose_extracted() {
             let output = Command::new(&goose_path)
                 .arg("--help")
-                .env("GOOSE_CONFIG_DIR", &config_dir)
+                .env("GOOSE_CONFIG_DIR", &paths.config_dir)
                 .output();
 
             if let Ok(out) = output {
@@ -88,10 +105,14 @@ fn main() {
     } else if args.len() > 1 && (args[1] == "-V" || args[1] == "--version") {
         println!("hirn 0.1.0");
 
-        let home = dirs::home_dir().unwrap();
-        let config_dir = home.join(".config").join("hirn");
-        let bin_dir = home.join(".hirn").join("bin");
-        let version_cache_path = bin_dir.join(".version_cache");
+        let paths = match get_hirn_paths() {
+            Ok(p) => p,
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                process::exit(1);
+            }
+        };
+        let version_cache_path = paths.bin_dir.join(".version_cache");
 
         if version_cache_path.exists() {
             if let Ok(cached_ver) = fs::read_to_string(&version_cache_path) {
@@ -104,7 +125,7 @@ fn main() {
         if let Ok(goose_path) = ensure_goose_extracted() {
             let output = Command::new(&goose_path)
                 .arg("--version")
-                .env("GOOSE_CONFIG_DIR", &config_dir)
+                .env("GOOSE_CONFIG_DIR", &paths.config_dir)
                 .output();
 
             if let Ok(out) = output {

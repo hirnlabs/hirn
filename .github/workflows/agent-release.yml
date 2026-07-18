@@ -1,0 +1,129 @@
+name: Release Hirn Agent
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'agent/**'
+      - '.github/workflows/agent-release.yml'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'agent/**'
+      - '.github/workflows/agent-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build - ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: hirn
+            asset_extension: tar.gz
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact_name: hirn
+            asset_extension: tar.gz
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: hirn
+            asset_extension: tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: hirn
+            asset_extension: tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: hirn.exe
+            asset_extension: zip
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install cross-compilation tools (Linux AArch64 only)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: agent
+
+      - name: Build binary
+        working-directory: agent
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare packaging variables
+        shell: bash
+        run: |
+          # If triggered by a tag, use the tag name. Otherwise, use dummy version for naming.
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG_NAME="${{ github.ref_name }}"
+          else
+            TAG_NAME="v0.0.0-draft"
+          fi
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+
+      - name: Package asset (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd agent/target/${{ matrix.target }}/release
+          tar -czf ../../../../hirn-${{ env.TAG_NAME }}-${{ matrix.target }}.tar.gz ${{ matrix.artifact_name }}
+          cd ../../../..
+
+      - name: Package asset (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "agent/target/${{ matrix.target }}/release/${{ matrix.artifact_name }}" -DestinationPath "hirn-${{ env.TAG_NAME }}-${{ matrix.target }}.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hirn-${{ matrix.target }}
+          path: hirn-${{ env.TAG_NAME }}-${{ matrix.target }}.${{ matrix.asset_extension }}
+          retention-days: 1
+
+  create-release:
+    name: Create Draft Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: hirn-*
+          merge-multiple: true
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
