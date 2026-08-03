@@ -2,6 +2,8 @@
 
 The cross-platform Desktop GUI and Modular Tool Host for Hirn. Built with **Tauri v2**, **Svelte 5**, and **TypeScript**.
 
+![Hirn Desktop Light Mode](../homepage/public/assets/desktop-light.png)
+
 Hirn Desktop provides a high-density, minimal interface (inspired by Linear and Anytype) for interacting with multiple Agent Client Protocol (ACP) agents simultaneously — whether running locally on your computer, on your local network, or securely over P2P.
 
 ---
