@@ -2,6 +2,25 @@
   import type { SessionStore } from '../stores/session.svelte';
   import type { AcpModel } from '../types/acp';
   import ToolExecutionCard from './ToolExecutionCard.svelte';
+  import * as InputGroup from './ui/input-group';
+  import * as DropdownMenu from './ui/dropdown-menu';
+  import { Separator } from './ui/separator';
+  import { 
+    ChevronDown, 
+    Paperclip, 
+    X, 
+    Search, 
+    Star, 
+    Check, 
+    Compass,
+    Wrench,
+    Sparkles,
+    Play,
+    Plus as IconPlus,
+    ArrowUp as ArrowUpIcon,
+    File,
+    Folder
+  } from '@lucide/svelte';
 
   let { store }: { store: SessionStore } = $props();
   let promptText = $state('');
@@ -321,900 +340,356 @@
 
 <svelte:window onclick={handleBackdropClick} />
 
-<div class="chat-canvas">
+<div class="flex-1 flex flex-col h-screen bg-background text-foreground overflow-x-hidden relative">
   {#if activeSession}
-    <header class="chat-header">
-      <div class="header-info">
-        <h2 class="title">{activeSession.title}</h2>
-        <span class="agent-badge">{activeSession.agentName}</span>
+    <!-- Header with centered Model picker (LibreChat Style) -->
+    <header class="flex items-center justify-between px-6 py-3 border-b border-border/60 bg-background relative z-40">
+      <div class="flex flex-col min-w-0">
+        <h2 class="text-sm font-bold text-foreground truncate max-w-[200px] sm:max-w-xs">{activeSession.title}</h2>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono border border-border/30">{activeSession.agentName}</span>
+        </div>
       </div>
-      <div class="header-status {activeSession.status}">
-        Status: {activeSession.status}
+
+      <div class="flex items-center gap-3">
+        <span class="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded border border-border/30 font-medium">
+          {activeSession.status}
+        </span>
       </div>
     </header>
 
-    <!-- Ultra-Minimal Minimalist Chat Feed (Matching Provided Screenshot 1:1) -->
-    <div class="messages-container">
-      {#each activeSession.messages as msg (msg.id)}
-        <div class="message-turn {msg.role}">
-          {#if msg.role === 'user'}
-            <div class="user-card-bubble">
-              {msg.content}
-            </div>
-          {:else}
-            {#if msg.thoughts}
-              <details class="thoughts-block">
-                <summary>Thought Process</summary>
-                <p>{msg.thoughts}</p>
-              </details>
-            {/if}
-
-            {#if msg.toolCalls}
-              {#each msg.toolCalls as tool}
-                <ToolExecutionCard toolCall={tool} />
-              {/each}
-            {/if}
-
-            {#if msg.content}
-              <div class="assistant-text-block">
-                {msg.content}
+    <!-- Chat Messages Feed -->
+    <div class="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-6 scrollbar-thin">
+      <div class="max-w-[768px] mx-auto space-y-6">
+        {#each activeSession.messages as msg (msg.id)}
+          <div class="flex flex-col gap-2">
+            {#if msg.role === 'user'}
+              <!-- User message: rounded card bubble -->
+              <div class="flex justify-end">
+                <div class="bg-muted rounded-2xl px-4 py-2.5 text-sm text-foreground max-w-[85%] whitespace-pre-wrap">
+                  {msg.content}
+                </div>
               </div>
-            {/if}
-          {/if}
-        </div>
-      {/each}
-    </div>
+            {:else}
+              <!-- Assistant message: clean markdown structure with details for thoughts -->
+              <div class="flex flex-col gap-3">
+                {#if msg.thoughts}
+                  <details class="bg-muted/40 rounded-xl p-3 text-xs text-muted-foreground group">
+                    <summary class="font-semibold text-foreground/80 cursor-pointer list-none flex items-center justify-between">
+                      <span>Thought Process</span>
+                      <ChevronDown class="size-3.5 text-gray-500 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <p class="mt-2 leading-relaxed whitespace-pre-wrap pt-2">{msg.thoughts}</p>
+                  </details>
+                {/if}
 
-    <!-- Goose & 1:1 Zed Floating Prompt Container -->
-    <div class="input-container">
-      <div class="goose-prompt-box">
-        <!-- Attached Files & Folders Display Row -->
-        {#if attachedFiles.length > 0}
-          <div class="attached-files-row">
-            {#each attachedFiles as file, idx (idx)}
-              <div class="attached-file-pill">
-                <span class="file-icon">{file.isFolder ? '📁' : '📎'}</span>
-                <span class="file-name" title={file.path}>{file.name}</span>
-                <button class="remove-file-btn" onclick={() => removeFile(idx)}>×</button>
-              </div>
-            {/each}
-          </div>
-        {/if}
-
-        <textarea
-          class="prompt-textarea"
-          placeholder="Type a message or prompt..."
-          bind:value={promptText}
-          onkeydown={handleKeyDown}
-          rows={2}
-        ></textarea>
-
-        <div class="prompt-bottom-bar">
-          <div class="left-badges">
-            <!-- Plain Monochrome Trigger -->
-            <div class="model-picker-container">
-              <button
-                class="model-picker-trigger-clean"
-                onclick={(e) => { e.stopPropagation(); isModelMenuOpen = !isModelMenuOpen; isToolsMenuOpen = false; isAttachMenuOpen = false; }}
-                title="Select LLM Model"
-              >
-                <!-- Monochrome Plain Provider Icon -->
-                <span class="provider-icon-badge">
-                  {#if selectedModel?.provider.includes('Google')}
-                    G
-                  {:else if selectedModel?.provider.includes('Anthropic')}
-                    A
-                  {:else if selectedModel?.provider.includes('Meta')}
-                    M
-                  {:else if selectedModel?.provider.includes('LMStudio')}
-                    LM
-                  {:else}
-                    L
-                  {/if}
-                </span>
-
-                <span class="model-clean-label">{selectedModel?.name || selectedModel?.id}</span>
-              </button>
-
-              <!-- 1:1 Zed Popover Menu -->
-              {#if isModelMenuOpen}
-                <div class="zed-model-popover-1to1">
-                  <!-- Search Bar at Top -->
-                  <div class="popover-search-container">
-                    <input
-                      type="text"
-                      class="popover-search-input"
-                      placeholder="Select a model..."
-                      bind:value={searchQuery}
-                      onclick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-
-                  <!-- Model Groups & Favorites -->
-                  <div class="popover-scroll-area">
-                    {#each groupedModels() as group}
-                      <div class="provider-group">
-                        <div class="provider-header">{group.header}</div>
-                        {#each group.models as model}
-                          <div
-                            class="zed-model-row-1to1 {model.id === activeSession.selectedModelId ? 'active' : ''}"
-                            role="button"
-                            tabindex="0"
-                            onclick={() => selectModel(model.id)}
-                            onkeydown={(e) => { if (e.key === 'Enter') selectModel(model.id); }}
-                          >
-                            <div class="model-row-left">
-                              <!-- Plain Monochrome Icon in Row -->
-                              <span class="provider-icon-badge">
-                                {#if model.provider.includes('Google')}
-                                  G
-                                {:else if model.provider.includes('Anthropic')}
-                                  A
-                                {:else if model.provider.includes('Meta')}
-                                  M
-                                {:else if model.provider.includes('LMStudio')}
-                                  LM
-                                {:else}
-                                  L
-                                {/if}
-                              </span>
-
-                              <span class="zed-model-title">{model.name}</span>
-                            </div>
-
-                            <div class="model-row-actions">
-                              <!-- Filled Star Shown Only On Hover (Replacing Tick) -->
-                              <span
-                                class="star-icon {favoriteModelIds.includes(model.id) ? 'starred' : ''}"
-                                role="button"
-                                tabindex="0"
-                                onclick={(e) => toggleFavorite(e, model.id)}
-                                onkeydown={(e) => { if (e.key === 'Enter') toggleFavorite(e, model.id); }}
-                                title={favoriteModelIds.includes(model.id) ? 'Remove from Favorites' : 'Add to Favorites'}
-                              >★</span>
-
-                              {#if model.id === activeSession.selectedModelId}
-                                <span class="checkmark">✓</span>
-                              {/if}
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
+                {#if msg.toolCalls}
+                  <div class="space-y-2">
+                    {#each msg.toolCalls as tool}
+                      <ToolExecutionCard toolCall={tool} />
                     {/each}
                   </div>
+                {/if}
 
-                  <!-- Bottom Footer: Configure Button -->
-                  <div class="popover-footer">
-                    <button class="configure-btn">
-                      <span>Configure</span>
-                      <span class="shortcut">alt-shift-c</span>
-                    </button>
+                {#if msg.content}
+                  <div class="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap select-text">
+                    {msg.content}
                   </div>
-                </div>
-              {/if}
+                {/if}
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <div class="h-[40vh] flex flex-col items-center justify-center text-center gap-4 px-4">
+            <div class="size-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-lg font-black text-white shadow-lg animate-pulse">
+              H
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-base font-bold text-foreground">How can I help you today?</h3>
+              <p class="text-xs text-muted-foreground max-w-sm">Select a model at the top, configure your active tools, or ask questions to get started.</p>
             </div>
           </div>
-
-          <div class="right-tools">
-            <span class="metrics">
-              <span class="status-dot-green">●</span> 6k / 128k
-            </span>
-
-            <!-- Apps & Tools Extensions Popover Trigger -->
-            <div class="tools-picker-container">
-              <button
-                class="tool-count-btn"
-                onclick={(e) => { e.stopPropagation(); isToolsMenuOpen = !isToolsMenuOpen; isModelMenuOpen = false; isAttachMenuOpen = false; }}
-                title="Manage Extensions for this Chat Session"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7" rx="1"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1"/>
-                </svg>
-                <span>{totalActiveToolsCount()}</span>
-              </button>
-
-              <!-- Permission Control Extensions Popover -->
-              {#if isToolsMenuOpen}
-                <div class="zed-model-popover-1to1 tools-popover">
-                  <!-- Search Bar at Top -->
-                  <div class="popover-search-container">
-                    <input
-                      type="text"
-                      class="popover-search-input"
-                      placeholder="Erweiterungen suchen..."
-                      bind:value={toolsSearchQuery}
-                      onclick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-
-                  <div class="popover-scroll-area">
-                    {#each groupedExtensions() as group}
-                      <div class="provider-group">
-                        <div class="provider-header">{group.header}</div>
-                        {#each group.items as ext (ext.id)}
-                          <div
-                            class="zed-model-row-1to1"
-                            role="button"
-                            tabindex="0"
-                            onclick={() => handleExtensionRowClick(ext)}
-                            onkeydown={(e) => { if (e.key === 'Enter') handleExtensionRowClick(ext); }}
-                          >
-                            <div class="model-row-left">
-                              <span class="ext-icon-badge">{ext.icon}</span>
-                              <span class="zed-model-title">{ext.name}</span>
-                            </div>
-
-                            <!-- Uniform Fixed-Width Parent Permission Selector -->
-                            <select
-                              class="perm-select"
-                              value={ext.permission}
-                              onclick={(e) => e.stopPropagation()}
-                              onchange={(e) => setParentPermission(ext.id, (e.target as HTMLSelectElement).value as ParentPermissionState)}
-                            >
-                              {#if ext.tools && ext.tools.length > 0}
-                                <option value="per_tool">Per Tool</option>
-                              {/if}
-                              <option value="off">Off</option>
-                              <option value="ask">Ask</option>
-                              <option value="allow">Allow</option>
-                            </select>
-                          </div>
-
-                          <!-- Sub-Tools Panel: Expandable by clicking parent row at any time -->
-                          {#if selectedExtForTools?.id === ext.id && ext.tools}
-                            <div class="subtools-panel">
-                              {#each ext.tools as tool (tool.id)}
-                                <div class="zed-model-row-1to1 subtool-row-full">
-                                  <span class="subtool-name">{tool.name}</span>
-
-                                  {#if ext.permission === 'per_tool'}
-                                    <!-- Uniform Fixed-Width Selector shown ONLY in 'Per Tool' mode -->
-                                    <select
-                                      class="perm-select"
-                                      value={tool.permission}
-                                      onclick={(e) => e.stopPropagation()}
-                                      onchange={(e) => setToolPermission(ext.id, tool.id, (e.target as HTMLSelectElement).value as PermissionState)}
-                                    >
-                                      <option value="off">Off</option>
-                                      <option value="ask">Ask</option>
-                                      <option value="allow">Allow</option>
-                                    </select>
-                                  {/if}
-                                </div>
-                              {/each}
-                            </div>
-                          {/if}
-                        {/each}
-                      </div>
-                    {/each}
-                  </div>
-
-                  <!-- Bottom Footer: Configure Button -->
-                  <div class="popover-footer">
-                    <button class="configure-btn">
-                      <span>Configure</span>
-                      <span class="shortcut">alt-shift-e</span>
-                    </button>
-                  </div>
-                </div>
-              {/if}
-            </div>
-
-            <!-- Single Unified Attachment Button with Popover -->
-            <div class="attach-picker-container">
-              <button class="icon-tool-btn" onclick={toggleAttachMenu} title="Attach Files or Folders">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                </svg>
-              </button>
-
-              {#if isAttachMenuOpen}
-                <div class="attach-popover">
-                  <button class="attach-option-btn" onclick={handleAttachFiles}>
-                    <span class="option-icon">📎</span>
-                    <span>Attach Files...</span>
-                  </button>
-                  <button class="attach-option-btn" onclick={handleAttachFolder}>
-                    <span class="option-icon">📁</span>
-                    <span>Attach Folder...</span>
-                  </button>
-                </div>
-              {/if}
-            </div>
-
-            <!-- Hidden HTML inputs for files and folders -->
-            <input
-              type="file"
-              multiple
-              bind:this={fileInputRef}
-              onchange={handleFileInputChange}
-              style="display: none;"
-            />
-
-            <input
-              type="file"
-              webkitdirectory
-              bind:this={folderInputRef}
-              onchange={handleFolderInputChange}
-              style="display: none;"
-            />
-
-            <button class="send-circle-btn" onclick={handleSubmit} title="Send Message (Enter)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="12" y1="19" x2="12" y2="5"/>
-                <polyline points="5 12 12 5 19 12"/>
-              </svg>
-            </button>
-          </div>
-        </div>
+        {/each}
       </div>
     </div>
+
+    <!-- Centered Floating Input Bar (LibreChat Style) -->
+    <div class="p-4 md:pb-6 bg-background">
+      <div class="max-w-[768px] mx-auto w-full relative">
+        <InputGroup.Root class="!opacity-100 !bg-muted/50 border !border-transparent focus-within:!border-border rounded-[24px] shadow-md focus-within:shadow-lg transition-all p-3 flex flex-col gap-2.5">
+          <!-- Attached Pills -->
+          {#if attachedFiles.length > 0}
+            <div class="flex flex-wrap gap-1.5 px-2">
+              {#each attachedFiles as file, idx (idx)}
+                <div class="flex items-center gap-1.5 bg-background border border-border rounded-xl px-2.5 py-1 text-xs text-foreground shadow-sm">
+                  <span>{file.isFolder ? '📁' : '📎'}</span>
+                  <span class="max-w-[150px] truncate font-medium">{file.name}</span>
+                  <button onclick={() => removeFile(idx)} class="text-gray-500 hover:text-white transition-colors">
+                    <X class="size-3.5" />
+                  </button>
+                </div>
+              {/each}
+            </div>
+          {/if}
+
+          <!-- Textarea prompt -->
+          <InputGroup.Textarea
+            placeholder="Ask, Search or Chat..."
+            bind:value={promptText}
+            onkeydown={handleKeyDown}
+            rows={2}
+            class="w-full !bg-transparent border-none outline-none text-sm text-foreground py-1 px-3 resize-none leading-relaxed min-h-[60px]"
+          />
+
+          <!-- Input bar tools -->
+          <InputGroup.Addon align="block-end" class="flex items-center border-t border-border/40 pt-2 px-1">
+            <!-- Left aligned controls -->
+            <div class="flex items-center gap-3">
+              <!-- Model Selection Trigger inside Prompt bottom bar -->
+              <div class="relative model-picker-container">
+                <DropdownMenu.Root bind:open={isModelMenuOpen}>
+                  <DropdownMenu.Trigger>
+                    {#snippet child({ props })}
+                      <InputGroup.Button
+                        {...props}
+                        variant="ghost"
+                        class="flex items-center gap-1.5 h-7 px-2.5 bg-muted hover:bg-muted/80 border border-border rounded-xl text-[10px] text-foreground/80 font-medium transition-all"
+                      >
+                        <span class="size-3.5 rounded bg-background flex items-center justify-center text-[8px] font-mono border border-border shrink-0 text-foreground mr-1">
+                          {#if selectedModel?.provider.includes('Google')}G{:else if selectedModel?.provider.includes('Anthropic')}A{:else if selectedModel?.provider.includes('Meta')}M{:else if selectedModel?.provider.includes('LMStudio')}LM{:else}L{/if}
+                        </span>
+                        <span>{selectedModel?.name || selectedModel?.id}</span>
+                        <ChevronDown class="size-3 text-gray-500 ml-1" />
+                      </InputGroup.Button>
+                    {/snippet}
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content
+                    side="top"
+                    align="start"
+                    class="w-[320px] bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col p-0 animate-in fade-in duration-100"
+                  >
+                    <div class="p-2 border-b border-border flex items-center gap-2">
+                      <Search class="size-4 text-gray-500 shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Search models..."
+                        class="w-full bg-transparent border-none outline-none text-xs text-foreground placeholder-muted-foreground/60 py-1"
+                        bind:value={searchQuery}
+                        onclick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div class="max-h-[280px] overflow-y-auto p-1.5 flex flex-col gap-3">
+                      {#each groupedModels() as group}
+                        <div class="flex flex-col gap-0.5">
+                          <div class="text-[9px] font-semibold text-gray-500 uppercase tracking-wider px-2.5 py-1 font-mono">
+                            {group.header}
+                          </div>
+                          {#each group.models as model}
+                            <DropdownMenu.Item
+                              onclick={() => selectModel(model.id)}
+                              class="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-left hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer {model.id === activeSession.selectedModelId ? 'bg-accent text-accent-foreground font-medium border border-border' : 'text-foreground/80'}"
+                            >
+                              <div class="flex items-center gap-2 min-w-0">
+                                <span class="size-4 rounded bg-muted flex items-center justify-center text-[9px] font-mono border border-border shrink-0">
+                                  {#if model.provider.includes('Google')}G{:else if model.provider.includes('Anthropic')}A{:else if model.provider.includes('Meta')}M{:else if model.provider.includes('LMStudio')}LM{:else}L{/if}
+                                </span>
+                                <span class="truncate">{model.name}</span>
+                              </div>
+                              <div class="flex items-center gap-1">
+                                <span
+                                  onclick={(e) => toggleFavorite(e, model.id)}
+                                  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleFavorite(e, model.id); }}
+                                  role="button"
+                                  tabindex="0"
+                                  class="p-1 hover:text-yellow-400 text-gray-500 transition-colors cursor-pointer"
+                                >
+                                  <Star class="size-3 {favoriteModelIds.includes(model.id) ? 'fill-yellow-400 text-yellow-400' : ''}" />
+                                </span>
+                                {#if model.id === activeSession.selectedModelId}
+                                  <Check class="size-3.5 text-emerald-400 shrink-0" />
+                                {/if}
+                              </div>
+                            </DropdownMenu.Item>
+                          {/each}
+                        </div>
+                      {/each}
+                    </div>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Root>
+              </div>
+
+              <!-- Context limits / token counter badge -->
+              <InputGroup.Text class="text-[10px] text-muted-foreground font-mono">6k / 128k</InputGroup.Text>
+            </div>
+
+            <!-- Right aligned controls -->
+            <div class="flex items-center gap-1.5 ms-auto">
+              <!-- Tools Extensions Popover -->
+              <div class="relative tools-picker-container">
+                <button
+                  onclick={(e) => { e.stopPropagation(); isToolsMenuOpen = !isToolsMenuOpen; isModelMenuOpen = false; isAttachMenuOpen = false; }}
+                  class="flex items-center gap-1.5 px-2.5 py-1 bg-muted hover:bg-muted/80 border border-border rounded-xl text-[10px] font-mono text-foreground/80 transition-all cursor-pointer h-7"
+                  title="Session Extensions & Tool Permissions"
+                >
+                  <Wrench class="size-3 text-gray-400" />
+                  <span>{totalActiveToolsCount()}</span>
+                </button>
+
+                {#if isToolsMenuOpen}
+                  <div class="absolute bottom-full right-0 mb-2 w-[320px] bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in duration-150">
+                    <div class="p-2 border-b border-border flex items-center gap-2">
+                      <Search class="size-4 text-gray-500 shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Search tools..."
+                        class="w-full bg-transparent border-none outline-none text-xs text-foreground placeholder-muted-foreground/60 py-1"
+                        bind:value={toolsSearchQuery}
+                        onclick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div class="max-h-[280px] overflow-y-auto p-1.5 flex flex-col gap-3">
+                      {#each groupedExtensions() as group}
+                        <div class="flex flex-col gap-0.5">
+                          <div class="text-[9px] font-semibold text-gray-500 uppercase tracking-wider px-2.5 py-1 font-mono">
+                            {group.header}
+                          </div>
+                          {#each group.items as ext (ext.id)}
+                            <div
+                              class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
+                              role="button"
+                              tabindex="0"
+                              onclick={() => handleExtensionRowClick(ext)}
+                              onkeydown={(e) => { if (e.key === 'Enter') handleExtensionRowClick(ext); }}
+                            >
+                              <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-sm shrink-0">{ext.icon}</span>
+                                <span class="truncate text-foreground font-medium">{ext.name}</span>
+                              </div>
+                              <select
+                                class="bg-muted border border-border text-[10px] text-foreground px-2 py-0.5 rounded cursor-pointer outline-none"
+                                value={ext.permission}
+                                onclick={(e) => e.stopPropagation()}
+                                onchange={(e) => setParentPermission(ext.id, (e.target as HTMLSelectElement).value as ParentPermissionState)}
+                              >
+                                {#if ext.tools && ext.tools.length > 0}
+                                  <option value="per_tool">Per Tool</option>
+                                {/if}
+                                <option value="off">Off</option>
+                                <option value="ask">Ask</option>
+                                <option value="allow">Allow</option>
+                              </select>
+                            </div>
+
+                            {#if selectedExtForTools?.id === ext.id && ext.tools}
+                              <div class="pl-6 flex flex-col gap-0.5 border-l border-border ml-4 mt-0.5 mb-1.5">
+                                {#each ext.tools as tool (tool.id)}
+                                  <div class="flex items-center justify-between py-1 px-2 hover:bg-accent hover:text-accent-foreground rounded">
+                                    <span class="text-[11px] text-muted-foreground truncate">{tool.name}</span>
+                                    {#if ext.permission === 'per_tool'}
+                                      <select
+                                        class="bg-muted border border-border text-[9px] text-foreground px-1.5 py-0.5 rounded cursor-pointer outline-none"
+                                        value={tool.permission}
+                                        onclick={(e) => e.stopPropagation()}
+                                        onchange={(e) => setToolPermission(ext.id, tool.id, (e.target as HTMLSelectElement).value as PermissionState)}
+                                      >
+                                        <option value="off">Off</option>
+                                        <option value="ask">Ask</option>
+                                        <option value="allow">Allow</option>
+                                      </select>
+                                    {/if}
+                                  </div>
+                                {/each}
+                              </div>
+                            {/if}
+                          {/each}
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
+              </div>
+
+              <!-- Attach Popover -->
+              <div class="relative attach-picker-container">
+                <InputGroup.Button
+                  variant="ghost"
+                  class="rounded-full size-7 flex items-center justify-center p-0 text-muted-foreground hover:text-foreground hover:bg-muted bg-transparent border-none"
+                  onclick={toggleAttachMenu}
+                  title="Attach files or folders"
+                >
+                  <Paperclip class="size-4" />
+                </InputGroup.Button>
+
+                {#if isAttachMenuOpen}
+                  <div class="absolute bottom-full right-0 mb-2 w-[160px] bg-popover border border-border rounded-xl shadow-2xl z-50 p-1 flex flex-col gap-0.5 animate-in fade-in duration-100">
+                    <button onclick={handleAttachFiles} class="flex items-center gap-2.5 w-full px-3 py-2 text-xs rounded-lg hover:bg-accent hover:text-accent-foreground text-foreground text-left transition-all">
+                      <File class="size-3.5 text-muted-foreground" />
+                      <span>Attach Files...</span>
+                    </button>
+                    <button onclick={handleAttachFolder} class="flex items-center gap-2.5 w-full px-3 py-2 text-xs rounded-lg hover:bg-accent hover:text-accent-foreground text-foreground text-left transition-all">
+                      <Folder class="size-3.5 text-muted-foreground" />
+                      <span>Attach Folder...</span>
+                    </button>
+                  </div>
+                {/if}
+              </div>
+
+              <Separator orientation="vertical" class="!h-4 bg-border" />
+
+              <!-- Send button -->
+              <InputGroup.Button
+                variant="default"
+                class="rounded-full size-7 flex items-center justify-center p-0"
+                disabled={!promptText.trim() && attachedFiles.length === 0}
+                onclick={handleSubmit}
+                title="Send Message"
+              >
+                <ArrowUpIcon class="size-4" />
+                <span class="sr-only">Send</span>
+              </InputGroup.Button>
+            </div>
+          </InputGroup.Addon>
+        </InputGroup.Root>
+      </div>
+    </div>
+
+    <!-- Hidden HTML input elements -->
+    <input
+      type="file"
+      multiple
+      bind:this={fileInputRef}
+      onchange={handleFileInputChange}
+      style="display: none;"
+    />
+    <input
+      type="file"
+      webkitdirectory
+      bind:this={folderInputRef}
+      onchange={handleFolderInputChange}
+      style="display: none;"
+    />
   {:else}
-    <div class="empty-state">
-      <p>No active session selected. Create or select a session to begin.</p>
+    <div class="flex-1 flex flex-col items-center justify-center text-center gap-3">
+      <Compass class="size-10 text-gray-500 animate-spin" />
+      <p class="text-sm text-gray-400">No active session selected. Create or select a session to begin.</p>
     </div>
   {/if}
 </div>
 
 <style>
-  .chat-canvas {
-    flex: 1;
-    min-width: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-canvas, #09090b);
-    color: var(--text-main, #e4e4e7);
-    overflow-x: hidden;
-    box-sizing: border-box;
+  /* Custom scrollbar styling */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
   }
-  .chat-header {
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border-color, #18181b);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--bg-canvas, #09090b);
-    box-sizing: border-box;
-  }
-  .title {
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0 0 2px 0;
-    color: var(--text-main, #f4f4f5);
-  }
-  .agent-badge {
-    font-size: 11px;
-    background: var(--bg-card, #18181b);
-    color: var(--text-muted, #a1a1aa);
-    padding: 2px 6px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color, #27272a);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
-  .header-status {
-    font-size: 11px;
-    text-transform: capitalize;
-    color: var(--text-muted, #71717a);
-  }
-  .header-status.working { color: var(--text-main, #ffffff); }
-
-  /* Ultra-Minimal Chat Feed (Matching Screenshot 1:1) */
-  .messages-container {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-sizing: border-box;
-  }
-  .message-turn {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-sizing: border-box;
-  }
-
-  /* User Message Dark Card Bubble (Matching Screenshot 1:1) */
-  .user-card-bubble {
-    background: #141518;
-    border: 1px solid #27272a;
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: #e4e4e7;
-    font-size: 13.5px;
-    line-height: 1.5;
-    font-family: inherit;
-    box-sizing: border-box;
-    width: 100%;
-    white-space: pre-wrap;
-  }
-
-  /* Assistant Text Block (Matching Screenshot 1:1) */
-  .assistant-text-block {
-    color: #e4e4e7;
-    font-size: 13.5px;
-    line-height: 1.6;
-    padding: 2px 0;
-    white-space: pre-wrap;
-  }
-
-  .thoughts-block {
-    margin: 4px 0;
-    font-size: 11px;
-    color: var(--text-muted, #71717a);
-    background: var(--bg-card, #121215);
-    padding: 6px 10px;
-    border-radius: 4px;
-    border-left: 2px solid var(--border-color, #3f3f46);
-  }
-  .thoughts-block summary { cursor: pointer; font-weight: 500; }
-
-  /* Prompt Box Container */
-  .input-container {
-    padding: 16px 24px 20px 24px;
-    background: var(--bg-canvas, #09090b);
-    box-sizing: border-box;
-    width: 100%;
-  }
-  .goose-prompt-box {
-    background: var(--bg-card, #141417);
-    border: 1px solid var(--border-color, #27272a);
-    border-radius: 12px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    box-sizing: border-box;
-    width: 100%;
-  }
-  .attached-files-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding-bottom: 2px;
-  }
-  .attached-file-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #18191d;
-    border: 1px solid #27272a;
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 11.5px;
-    color: #e4e4e7;
-  }
-  .file-name {
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .remove-file-btn {
+  .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
-    border: none;
-    color: #71717a;
-    cursor: pointer;
-    font-size: 13px;
-    line-height: 1;
-    padding: 0 2px;
   }
-  .remove-file-btn:hover {
-    color: #f4f4f5;
-  }
-  .prompt-textarea {
-    width: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-main, #f4f4f5);
-    font-family: inherit;
-    font-size: 13px;
-    resize: none;
-    line-height: 1.5;
-    box-sizing: border-box;
-  }
-  .prompt-bottom-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 4px;
-    box-sizing: border-box;
-  }
-  .left-badges {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-  }
-
-  /* Plain Monochrome Trigger */
-  .model-picker-container, .tools-picker-container, .attach-picker-container {
-    position: relative;
-  }
-
-  .attach-popover {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
-    width: 145px;
-    background: #141518;
-    border: 1px solid #27272a;
-    border-radius: 6px;
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.95);
-    z-index: 200;
-    box-sizing: border-box;
-  }
-  .attach-option-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 6px 8px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    color: #f4f4f5;
-    font-size: 12px;
-    font-family: inherit;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.1s;
-    box-sizing: border-box;
-  }
-  .attach-option-btn:hover {
-    background: #27272a;
-  }
-  .option-icon {
-    font-size: 12px;
-  }
-
-  .model-picker-trigger-clean {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    background: transparent;
-    border: none;
-    color: var(--text-main, #f4f4f5);
-    padding: 4px 6px;
-    font-size: 12px;
-    font-family: inherit;
-    font-weight: 500;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: opacity 0.15s;
-  }
-  .model-picker-trigger-clean:hover {
-    opacity: 0.85;
-  }
-  .model-clean-label {
-    color: #f4f4f5;
-    font-weight: 600;
-  }
-
-  /* Plain Monochrome Provider Icon */
-  .provider-icon-badge {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    color: #e4e4e7;
-    background: transparent;
-    flex-shrink: 0;
-  }
-
-  /* 1:1 Opaque Zed Popover Menu */
-  .zed-model-popover-1to1 {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 0;
-    width: 320px;
-    max-width: 90vw;
-    background: #141518;
-    border: 1px solid #27272a;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.95);
-    z-index: 200;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-  .tools-popover {
-    right: 0;
-    left: auto;
-    width: 310px;
-  }
-
-  .ext-icon-badge {
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
-
-  /* Subtools Panel */
-  .subtools-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 2px 0;
-  }
-
-  .subtool-row-full {
-    padding-left: 36px !important;
-  }
-
-  .subtool-name {
-    font-size: 12px;
-    color: #a1a1aa;
-  }
-
-  /* Plain Uniform Fixed-Width Permission Dropdown Selector */
-  .perm-select {
-    width: 92px;
-    background: #18191d;
-    border: 1px solid #27272a;
-    border-radius: 4px;
-    color: #f4f4f5;
-    font-size: 11px;
-    font-family: inherit;
-    padding: 3px 6px;
-    outline: none;
-    cursor: pointer;
-    margin-left: auto;
-    flex-shrink: 0;
-    transition: border-color 0.15s, background 0.15s;
-    box-sizing: border-box;
-  }
-  .perm-select:hover {
-    border-color: #3f3f46;
-    background: #27272a;
-  }
-  .perm-select option {
-    background: #141518;
-    color: #f4f4f5;
-    padding: 4px;
-  }
-
-  .popover-search-container {
-    padding: 10px 12px;
-    border-bottom: 1px solid #27272a;
-    box-sizing: border-box;
-  }
-  .popover-search-input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: #f4f4f5;
-    font-size: 13px;
-    font-family: inherit;
-    box-sizing: border-box;
-  }
-  .popover-search-input::placeholder {
-    color: #52525b;
-  }
-  .popover-scroll-area {
-    max-height: 280px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 6px;
-    box-sizing: border-box;
-  }
-  .provider-group {
-    margin-bottom: 8px;
-  }
-  .provider-header {
-    font-size: 10.5px;
-    font-weight: 500;
-    color: #71717a;
-    padding: 6px 10px 4px 10px;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    text-transform: uppercase;
-  }
-  .zed-model-row-1to1 {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 7px 10px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    color: #f4f4f5;
-    font-size: 12.5px;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.1s;
-    outline: none;
-    box-sizing: border-box;
-  }
-  .zed-model-row-1to1:hover {
-    background: #27272a;
-  }
-  .zed-model-row-1to1.active {
-    background: #27272a;
-  }
-  .model-row-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-  }
-  .zed-model-title {
-    color: #f4f4f5;
-    font-weight: 400;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .model-row-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  /* Star & Hover Replacement Behavior */
-  .star-icon {
-    font-size: 13px;
-    cursor: pointer;
-    color: #71717a;
-    display: none;
-    transition: color 0.1s;
-  }
-  .star-icon.starred {
-    color: #f4f4f5;
-  }
-
-  /* On Row Hover: Show Star, Hide Checkmark */
-  .zed-model-row-1to1:hover .star-icon {
-    display: inline-block;
-  }
-  .zed-model-row-1to1:hover .checkmark {
-    display: none;
-  }
-
-  .checkmark {
-    color: #38bdf8;
-    font-size: 13px;
-    font-weight: bold;
-  }
-
-  /* Popover Footer */
-  .popover-footer {
-    padding: 6px;
-    border-top: 1px solid #27272a;
-    background: #0d0e10;
-    box-sizing: border-box;
-  }
-  .configure-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 6px 10px;
-    background: #18191c;
-    border: 1px solid #27272a;
-    border-radius: 6px;
-    color: #e4e4e7;
-    font-size: 11px;
-    cursor: pointer;
-    transition: background 0.15s;
-    box-sizing: border-box;
-  }
-  .configure-btn:hover {
-    background: #27272a;
-  }
-  .shortcut {
-    color: #71717a;
-    font-size: 10px;
-    font-family: ui-monospace, monospace;
-  }
-
-  .right-tools {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-  }
-  .metrics {
-    font-size: 11px;
-    color: var(--text-muted, #71717a);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
-  .status-dot-green {
-    color: #10b981;
-    font-size: 9px;
-  }
-  .tool-count {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--text-muted, #71717a);
-    font-family: ui-monospace, monospace;
-  }
-  .tool-count-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--text-muted, #71717a);
-    font-family: ui-monospace, monospace;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    transition: color 0.15s;
-  }
-  .tool-count-btn:hover {
-    color: var(--text-main, #f4f4f5);
-  }
-  .icon-tool-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted, #71717a);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #2f2f2f;
     border-radius: 4px;
   }
-  .icon-tool-btn:hover {
-    color: var(--text-main, #f4f4f5);
-  }
-  .send-circle-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #3f3f46;
-    border: none;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    flex-shrink: 0;
-  }
-  .send-circle-btn:hover {
-    background: #52525b;
-    transform: scale(1.05);
-  }
-  .empty-state {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted, #52525b);
-    font-size: 13px;
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #3f3f3f;
   }
 </style>

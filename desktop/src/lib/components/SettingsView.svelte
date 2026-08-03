@@ -1,12 +1,23 @@
 <script lang="ts">
-  let theme = $state<'dark' | 'light'>('dark');
+  import { onMount } from 'svelte';
+
+  let theme = $state<'dark' | 'light'>('light');
   let relayUrl = $state('https://agent.hirn-labs.com');
   let licenseKey = $state('');
+
+  onMount(() => {
+    if (typeof document !== 'undefined') {
+      const isDark = document.documentElement.classList.contains('dark') || 
+                     document.documentElement.getAttribute('data-theme') === 'dark';
+      theme = isDark ? 'dark' : 'light';
+    }
+  });
 
   async function toggleTheme(newTheme: 'dark' | 'light') {
     theme = newTheme;
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', newTheme);
+      document.documentElement.classList.toggle('dark', newTheme === 'dark');
     }
     try {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');

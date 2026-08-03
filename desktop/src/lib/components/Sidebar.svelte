@@ -1,5 +1,17 @@
 <script lang="ts">
   import type { SessionStore } from '../stores/session.svelte';
+  import { 
+    MessageSquare, 
+    Plus, 
+    PanelLeftClose, 
+    PanelLeft, 
+    Settings, 
+    Cpu, 
+    Bot, 
+    Boxes, 
+    User,
+    Ellipsis
+  } from '@lucide/svelte';
 
   let { store, activeNav = $bindable('sessions') }: {
     store: SessionStore;
@@ -13,305 +25,194 @@
     { id: 'ws-3', name: 'Research Lab' }
   ]);
   let activeWorkspaceId = $state('ws-1');
+  let isProfileMenuOpen = $state(false);
 
   function handleNewSession() {
     activeNav = 'sessions';
     store.createSession(store.agents[0].id);
   }
+
+  // Simple reactive helper to group sessions
+  const groupedSessions = $derived.by(() => {
+    const today: typeof store.sessions = [];
+    const yesterday: typeof store.sessions = [];
+    const older: typeof store.sessions = [];
+
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    store.sessions.forEach(session => {
+      const diff = now - (session.updatedAt || session.createdAt || now);
+      if (diff < oneDay) {
+        today.push(session);
+      } else if (diff < 2 * oneDay) {
+        yesterday.push(session);
+      } else {
+        older.push(session);
+      }
+    });
+
+    return [
+      { label: 'Today', items: today },
+      { label: 'Yesterday', items: yesterday },
+      { label: 'Previous 7 Days', items: older }
+    ].filter(group => group.items.length > 0);
+  });
 </script>
 
-<aside class="sidebar {collapsed ? 'collapsed' : ''}">
-  <div class="sidebar-top">
-    <div class="header">
-      <button class="collapse-btn" onclick={() => collapsed = !collapsed} title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          {#if collapsed}
-            <polyline points="9 18 15 12 9 6"/>
-          {:else}
-            <polyline points="15 18 9 12 15 6"/>
-          {/if}
-        </svg>
-      </button>
-
-      {#if !collapsed}
-        <div class="workspace-selector">
-          <select bind:value={activeWorkspaceId} class="workspace-select" title="Active Workspace">
-            {#each workspaces as ws}
-              <option value={ws.id}>{ws.name}</option>
-            {/each}
-          </select>
-        </div>
-        <button class="new-session-btn" onclick={handleNewSession} title="New Session">+</button>
-      {/if}
-    </div>
-
+<aside class="flex flex-col bg-sidebar h-screen transition-all duration-300 select-none border-r border-sidebar-border text-sidebar-foreground {collapsed ? 'w-[60px]' : 'w-[260px]'}">
+  <!-- Top header bar -->
+  <div class="flex items-center justify-between p-3 gap-2 border-b border-sidebar-border/40">
     {#if !collapsed}
-      <div class="sessions-section">
-        <div class="section-label">Sessions</div>
-        <div class="session-list">
-          {#each store.sessions as session}
-            <button
-              class="session-item {activeNav === 'sessions' && store.activeSessionId === session.id ? 'active' : ''}"
-              onclick={() => {
-                activeNav = 'sessions';
-                store.selectSession(session.id);
-              }}
-            >
-              <span class="status-dot {session.status}">●</span>
-              <span class="session-title">{session.title}</span>
-            </button>
+      <div class="flex-1 min-w-0">
+        <select 
+          bind:value={activeWorkspaceId} 
+          class="w-full bg-sidebar border border-sidebar-border text-sidebar-foreground px-2 py-1.5 rounded-lg text-xs font-semibold cursor-pointer outline-none truncate hover:bg-sidebar-accent transition-all"
+        >
+          {#each workspaces as ws}
+            <option value={ws.id} class="bg-sidebar text-sidebar-foreground">{ws.name}</option>
           {/each}
-        </div>
+        </select>
       </div>
+    {/if}
+    
+    <button 
+      class="p-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-all"
+      onclick={() => collapsed = !collapsed}
+      title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+    >
+      {#if collapsed}
+        <PanelLeft class="size-4" />
+      {:else}
+        <PanelLeftClose class="size-4" />
+      {/if}
+    </button>
+  </div>
+
+  <!-- New Chat button -->
+  <div class="p-3">
+    {#if collapsed}
+      <button 
+        onclick={handleNewSession}
+        class="w-full flex items-center justify-center p-2.5 bg-sidebar hover:bg-sidebar-accent border border-sidebar-border text-sidebar-foreground rounded-lg transition-all"
+        title="New"
+      >
+        <Plus class="size-4" />
+      </button>
     {:else}
-      <div class="collapsed-sessions">
-        <button class="icon-btn new-icon" onclick={handleNewSession} title="New Session">+</button>
+      <button 
+        onclick={handleNewSession}
+        class="w-full flex items-center justify-between px-3 py-2 bg-sidebar hover:bg-sidebar-accent border border-sidebar-border text-sidebar-foreground rounded-lg transition-all text-sm font-medium"
+      >
+        <span>New</span>
+        <Plus class="size-4 text-sidebar-foreground/60" />
+      </button>
+    {/if}
+  </div>
+
+  <!-- Session List area -->
+  <div class="flex-1 overflow-y-auto px-3 py-2 scrollbar-thin">
+    {#if collapsed}
+      <div class="flex flex-col items-center gap-2">
         {#each store.sessions as session}
           <button
-            class="icon-btn {activeNav === 'sessions' && store.activeSessionId === session.id ? 'active' : ''}"
             onclick={() => {
               activeNav = 'sessions';
               store.selectSession(session.id);
             }}
-            title="{session.title} ({session.status})"
+            class="flex items-center justify-center size-9 rounded-lg transition-all relative {activeNav === 'sessions' && store.activeSessionId === session.id ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
+            title={session.title}
           >
-            <span class="status-dot {session.status}">●</span>
+            <div class="relative">
+              <MessageSquare class="size-4" />
+              <span class="absolute -top-0.5 -right-0.5 size-1.5 rounded-full border border-sidebar {session.status === 'working' ? 'bg-blue-500' : session.status === 'finished' ? 'bg-emerald-500' : session.status === 'needs_input' ? 'bg-amber-400' : 'bg-gray-600'}" title={session.status}></span>
+            </div>
           </button>
+        {/each}
+      </div>
+    {:else}
+      <div class="flex flex-col gap-5">
+        {#each groupedSessions as group}
+          <div class="flex flex-col gap-1">
+            <div class="text-[11px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-2 py-1">
+              {group.label}
+            </div>
+            <div class="flex flex-col gap-0.5">
+              {#each group.items as session}
+                <button
+                  onclick={() => {
+                    activeNav = 'sessions';
+                    store.selectSession(session.id);
+                  }}
+                  class="group flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-left transition-all {activeNav === 'sessions' && store.activeSessionId === session.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/80'}"
+                >
+                  <div class="relative shrink-0">
+                    <MessageSquare class="size-4 text-sidebar-foreground/60 group-hover:text-sidebar-foreground transition-colors" />
+                    <span class="absolute -top-0.5 -right-0.5 size-1.5 rounded-full border border-sidebar {session.status === 'working' ? 'bg-blue-500' : session.status === 'finished' ? 'bg-emerald-500' : session.status === 'needs_input' ? 'bg-amber-400' : 'bg-gray-600'}" title={session.status}></span>
+                  </div>
+                  <span class="truncate flex-1">{session.title}</span>
+                </button>
+              {/each}
+            </div>
+          </div>
         {/each}
       </div>
     {/if}
   </div>
 
-  <div class="sidebar-bottom-nav">
+  <!-- Bottom Navigation Row -->
+  <div class="flex flex-col gap-0.5 p-2 border-t border-sidebar-border/40 bg-sidebar">
     <button
-      class="nav-item {activeNav === 'apps' ? 'active' : ''}"
       onclick={() => activeNav = 'apps'}
-      title="Apps & Tools"
+      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'apps' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
+      title="Apps, Tools & Skills"
     >
-      <span class="nav-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="14" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/>
-        </svg>
-      </span>
-      {#if !collapsed}<span class="nav-label">Apps</span>{/if}
+      <Boxes class="size-4 shrink-0" />
+      {#if !collapsed}<span class="truncate text-left flex-1">Apps, Tools & Skills</span>{/if}
     </button>
 
     <button
-      class="nav-item {activeNav === 'agents' ? 'active' : ''}"
       onclick={() => activeNav = 'agents'}
-      title="Agents"
+      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'agents' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
+      title="Agents & Providers"
     >
-      <span class="nav-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="4 17 10 11 4 5"/>
-          <line x1="12" y1="19" x2="20" y2="19"/>
-        </svg>
-      </span>
-      {#if !collapsed}<span class="nav-label">Agents</span>{/if}
+      <Bot class="size-4 shrink-0" />
+      {#if !collapsed}<span class="truncate text-left flex-1">Agents & Providers</span>{/if}
     </button>
 
     <button
-      class="nav-item {activeNav === 'models' ? 'active' : ''}"
       onclick={() => activeNav = 'models'}
-      title="Local Models"
+      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'models' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
+      title="Model Configuration"
     >
-      <span class="nav-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="4" y="4" width="16" height="16" rx="2"/>
-          <rect x="9" y="9" width="6" height="6"/>
-          <line x1="9" y1="1" x2="9" y2="4"/>
-          <line x1="15" y1="1" x2="15" y2="4"/>
-          <line x1="20" y1="9" x2="23" y2="9"/>
-          <line x1="20" y1="15" x2="23" y2="15"/>
-          <line x1="1" y1="9" x2="4" y2="9"/>
-          <line x1="1" y1="15" x2="4" y2="15"/>
-        </svg>
-      </span>
-      {#if !collapsed}<span class="nav-label">Models</span>{/if}
+      <Cpu class="size-4 shrink-0" />
+      {#if !collapsed}<span class="truncate text-left flex-1">Model Configuration</span>{/if}
     </button>
 
     <button
-      class="nav-item {activeNav === 'settings' ? 'active' : ''}"
       onclick={() => activeNav = 'settings'}
+      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'settings' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
       title="Settings"
     >
-      <span class="nav-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-      </span>
-      {#if !collapsed}<span class="nav-label">Settings</span>{/if}
+      <Settings class="size-4 shrink-0" />
+      {#if !collapsed}<span class="truncate text-left flex-1">Settings</span>{/if}
     </button>
   </div>
 </aside>
 
 <style>
-  .sidebar {
-    width: 240px;
-    height: 100vh;
-    background: var(--bg-sidebar, #09090b);
-    border-right: 1px solid var(--border-color, #18181b);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    user-select: none;
+  /* Custom scrollbar styling */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
   }
-  .sidebar.collapsed {
-    width: 48px;
-  }
-  .sidebar-top {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-  }
-  .header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border-color, #18181b);
-  }
-  .collapse-btn {
+  .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
-    border: none;
-    color: var(--text-muted, #71717a);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #2f2f2f;
     border-radius: 4px;
-    flex-shrink: 0;
   }
-  .collapse-btn:hover { color: var(--text-main, #f4f4f5); background: var(--bg-card, #18181b); }
-  .workspace-selector {
-    flex: 1;
-    overflow: hidden;
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #3f3f3f;
   }
-  .workspace-select {
-    width: 100%;
-    background: var(--bg-card, #141417);
-    border: 1px solid var(--border-color, #27272a);
-    color: var(--text-main, #f4f4f5);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .new-session-btn {
-    background: var(--bg-card, #18181b);
-    border: 1px solid var(--border-color, #27272a);
-    color: var(--text-main, #f4f4f5);
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-  .new-session-btn:hover { background: var(--border-color, #27272a); }
-  .sessions-section {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 8px;
-  }
-  .section-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--text-muted, #52525b);
-    padding: 4px 8px;
-    font-weight: 600;
-  }
-  .session-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-top: 4px;
-  }
-  .session-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    color: var(--text-muted, #a1a1aa);
-    cursor: pointer;
-    font-size: 12px;
-    text-align: left;
-  }
-  .session-item:hover { background: var(--bg-card, #18181b); color: var(--text-main, #f4f4f5); }
-  .session-item.active { background: var(--border-color, #27272a); color: var(--text-main, #ffffff); font-weight: 500; }
-  .session-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .status-dot { font-size: 8px; }
-  .status-dot.idle { color: #52525b; }
-  .status-dot.working { color: #ffffff; display: inline-block; animation: pulse 1s infinite; }
-  .status-dot.waiting_for_input { color: #fbbf24; }
-  .status-dot.error { color: #f87171; }
-
-  .collapsed-sessions {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 0;
-    overflow-y: auto;
-  }
-  .icon-btn {
-    width: 32px;
-    height: 32px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    color: var(--text-muted, #a1a1aa);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .icon-btn:hover { background: var(--bg-card, #18181b); color: var(--text-main, #f4f4f5); }
-  .icon-btn.active { background: var(--border-color, #27272a); color: var(--text-main, #ffffff); }
-  .new-icon { background: var(--bg-card, #18181b); border: 1px solid var(--border-color, #27272a); }
-
-  .sidebar-bottom-nav {
-    border-top: 1px solid var(--border-color, #18181b);
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background: var(--bg-sidebar, #09090b);
-  }
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    color: var(--text-muted, #71717a);
-    cursor: pointer;
-    font-size: 12px;
-    transition: color 0.15s, background 0.15s;
-  }
-  .nav-item:hover { background: var(--bg-card, #18181b); color: var(--text-main, #e4e4e7); }
-  .nav-item.active { background: var(--bg-card, #18181b); color: var(--text-main, #ffffff); font-weight: 500; }
-  .nav-icon { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; }
-  .nav-label { flex: 1; text-align: left; }
-  @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
 </style>
