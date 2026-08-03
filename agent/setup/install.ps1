@@ -39,7 +39,7 @@ Write-Host "Installing Hirn Agent $Tag for $Target..."
 $AssetName = "hirn-$Tag-$Target.zip"
 $DownloadUrl = "https://github.com/$Repo/releases/download/$Tag/$AssetName"
 
-$TempDir = Join-Path [System.IO.Path]::GetTempPath() ([System.IO.Path]::GetRandomFileName())
+$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
 New-Item -ItemType Directory -Path $TempDir | Out-Null
 
 $ZipPath = Join-Path $TempDir $AssetName

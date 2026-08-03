@@ -10,6 +10,7 @@
 - [Router](./router/CONTEXT.md) — Intent classification & model dispatch logic.
 - [SDK](./sdk/CONTEXT.md) — TypeScript SDK for building modular tools.
 - [Server](./server/CONTEXT.md) — Distributed inference orchestration.
+- [Signaling](./signaling/CONTEXT.md) — Open source, self-hostable WebRTC signaling & encrypted store-and-forward message relay.
 - [Transcribe](./transcribe/CONTEXT.md) — Local privacy-first speech-to-text.
 
 ## Relationships

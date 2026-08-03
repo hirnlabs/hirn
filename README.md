@@ -16,19 +16,20 @@ Hirn is built on a [Local-First](https://www.inkandswitch.com/local-first/) foun
 
 We maintain a three-tier storage model that balances human usability with machine queryability:
 
-1.  **Tier 1 (Canonical)**: User data is stored as human-readable files (Markdown, JSON). This ensures 100% data ownership and longevity.
-2.  **Tier 2 (Collaboration)**: Binary CRDT overlays handle real-time sync across devices, ensuring conflict-free collaboration.
-3.  **Tier 3 (Queryable Indices)**: A multi-modal indexing layer containing SQLite (relational data), Grafeo (graph knowledge), and Vector DBs (RAG/semantic search).
+1. **Tier 1 (Canonical)**: User data is stored as human-readable files (Markdown, JSON). This ensures 100% data ownership and longevity.
+2. **Tier 2 (Collaboration)**: Binary CRDT overlays handle real-time sync across devices, ensuring conflict-free collaboration.
+3. **Tier 3 (Queryable Indices)**: A multi-modal indexing layer containing SQLite (relational data), Grafeo (graph knowledge), and Vector DBs (RAG/semantic search).
 
 > **Note**: All indices are maintained in sync with your files, providing a high-performance query layer for your agents and tools.
 
 ## The Pillars
 
+- **desktop**: multi-agent desktop host and web client
+- **agent**: Rust-based ACP (Agent Control Protocol) orchestration engine and CLI.
+- **signaling**: Minimal Rust WebRTC signaling server and encrypted store-and-forward message relay.
 - **router**: Intelligent local-first gateway. Routes prompts to the optimal model based on task difficulty and hardware capability.
-- **agent**: Rust-based orchestration engine. Handles complex ACP (Agent Control Protocol) tasks and workflow automation.
 - **learn**: Local feedback loop. A fine-tuning classifier that optimizes routing accuracy based on your usage patterns.
 - **server**: RPC-based model host. Orchestrates llama.cpp / vLLM backends, featuring VRAM sharding and load balancing.
-- **ui**: Extensible application ecosystem. Build modular HTML/JS applets that run offline via a secure, bidirectional SDK.
 - **transcribe**: Private voice input. Local-first transcription using Whisper, piping text directly to the router.
 
 ## For Developers: Ship nothing to the cloud
@@ -36,23 +37,30 @@ We maintain a three-tier storage model that balances human usability with machin
 Develop a tool, plug it into the Hirn ecosystem, and forget about the infrastructure.
 
 - **Zero Infrastructure**: Tools run on the user's device. No backend to operate, no database to secure.
-- **Rich SDK**: Your tools access the **Data Layer** (Tier 1-3) directly via TypeScript, gaining native support for persistence, RAG, collaboration, offline work and encrypted P2P syncronization across network boundaries.
+- **Rich SDK**: Your tools access the **Data Layer** (Tier 1-3) directly via TypeScript, gaining native support for persistence, RAG, collaboration, offline work and encrypted P2P synchronization across network boundaries.
 - **FFI-backed Performance**: Logic runs in a high-performance **Rust Sync Core** shared across Flutter (mobile), Tauri (desktop) and the agent CLI.
 
 ## Module Map
 
-| Module                         | Description                                          |
-| :----------------------------- | :--------------------------------------------------- |
-| [`agent`](./agent)             | ACP compliant orchestration engine.                  |
-| [`assistant`](./assistant)     | Mobile client (Flutter + Rust) for on-the-go access. |
-| [`data`](./data)               | Persistence management (File/SQLite/Vector/Graph).   |
-| [`desktop`](./desktop)         | Tauri-based cross-platform GUI & tool host.          |
-| [`homepage`](./homepage)       | Web dashboard & documentation portal.                |
-| [`router`](./router)           | Intent classification & model dispatch logic.        |
-| [`sdk/`](./sdk/)               | TypeScript SDK for building modular tools.           |
-| [`server/`](./server/)         | Distributed inference orchestration.                 |
-| [`transcribe/`](./transcribe/) | Local privacy-first speech-to-text.                  |
+| Module                         | Description                                                             |
+| :----------------------------- | :---------------------------------------------------------------------- |
+| [`agent`](./agent)             | ACP-compliant orchestration engine & CLI.                               |
+| [`assistant`](./assistant)     | Mobile client (Flutter + Rust) for on-the-go access.                    |
+| [`data`](./data)               | Persistence management (File/SQLite/Vector/Graph).                      |
+| [`desktop`](./desktop)         | Tauri v2 + Svelte 5 multi-agent GUI host & web client.                  |
+| [`homepage`](./homepage)       | Homepage & documentation portal.                                   |
+| [`router`](./router)           | Intent classification & model dispatch logic.                           |
+| [`sdk/`](./sdk/)               | TypeScript SDK for building modular tools.                              |
+| [`server/`](./server/)         | Distributed inference orchestration.                                    |
+| [`signaling/`](./signaling/)   | Minimal Rust WebRTC signaling server & encrypted store-and-forward queue.|
+| [`transcribe/`](./transcribe/) | Local privacy-first speech-to-text.                                     |
 
-## License
+## Commercial Licensing & Business Model
 
-Hirn is built for sovereignty. You are free to use and modify the code for non-commerical use. See [LICENSE](LICENSE) for details.
+Hirn is built for sovereignty. You are free to use and modify the code for non-commerical use. 
+
+- **Individual & Non-Commercial Use**: Hirn is free for personal and non-commercial use.
+- **Open Source & Self-Hostable**: The entire software stack is 100% open source and self-hostable.
+- **Commercial License**: Any commercial usage requires a valid **License** (one-time purchase) or an active **Hirn Sync Subscription**.
+
+See [LICENSE](LICENSE) for full licensing details.
