@@ -10,13 +10,26 @@ struct ProcessState {
 
 #[tauri::command]
 fn spawn_acp_agent(app: AppHandle, state: State<'_, ProcessState>, command: String, args: Vec<String>) -> Result<u32, String> {
-    let mut child = Command::new(&command)
-        .args(&args)
+    let mut cmd_to_run = command.clone();
+    let final_args = args.clone();
+
+    if command == "hirn" || command == "hirn.exe" {
+        let local_debug_bin = std::path::Path::new("agent/target/debug/hirn.exe");
+        let local_debug_bin_parent = std::path::Path::new("../agent/target/debug/hirn.exe");
+        if local_debug_bin.exists() {
+            cmd_to_run = local_debug_bin.to_string_lossy().to_string();
+        } else if local_debug_bin_parent.exists() {
+            cmd_to_run = local_debug_bin_parent.to_string_lossy().to_string();
+        }
+    }
+
+    let mut child = Command::new(&cmd_to_run)
+        .args(&final_args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| format!("Failed to spawn ACP binary '{}': {}", command, e))?;
+        .map_err(|e| format!("Failed to spawn ACP binary '{}': {}", cmd_to_run, e))?;
 
     let pid = child.id();
     let stdin = child.stdin.take().ok_or("Failed to open stdin")?;

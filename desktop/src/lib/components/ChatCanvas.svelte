@@ -2,6 +2,7 @@
   import type { SessionStore } from '../stores/session.svelte';
   import type { AcpModel } from '../types/acp';
   import ToolExecutionCard from './ToolExecutionCard.svelte';
+  import ErrorCard from './ErrorCard.svelte';
   import * as InputGroup from './ui/input-group';
   import * as DropdownMenu from './ui/dropdown-menu';
   import { Separator } from './ui/separator';
@@ -117,9 +118,7 @@
   let isModelMenuOpen = $state(false);
   let isToolsMenuOpen = $state(false);
   let isAttachMenuOpen = $state(false);
-  let thinkingEffort = $state<'off' | 'low' | 'mid' | 'high' | 'max'>('mid');
-  const thinkingLevels = ['off', 'low', 'mid', 'high', 'max'] as const;
-  let thinkingIdx = $derived(thinkingLevels.indexOf(thinkingEffort));
+  let searchQuery = $state('');
   let searchQuery = $state('');
   let toolsSearchQuery = $state('');
   let editorRef = $state<HTMLDivElement | null>(null);
@@ -684,6 +683,15 @@
   let selectedModel = $derived(
     activeSession?.availableModels.find(m => m.id === activeSession.selectedModelId) ?? activeSession?.availableModels[0]
   );
+  let isThinkingSupported = $derived(!!activeSession?.thoughtLevelConfig);
+  let thoughtLevels = $derived(activeSession?.thoughtLevelConfig?.levels ?? []);
+  let thinkingEffort = $derived(activeSession?.thoughtLevelConfig?.currentValue ?? 'off');
+  let thinkingIdx = $derived(thoughtLevels.findIndex(l => l.value === thinkingEffort));
+
+  function setThinkingLevel(value: string) {
+    if (!activeSession?.thoughtLevelConfig) return;
+    store.setThinkingLevel(activeSession.id, value);
+  }
 
   let filteredModels = $derived(() => {
     if (!activeSession) return [];
@@ -890,6 +898,8 @@
                     {msg.content}
                   </div>
                 </div>
+              {:else if msg.isError || msg.errorDetails || msg.content?.startsWith('⚠️')}
+                <ErrorCard message={msg} />
               {:else}
                 <!-- Assistant message: clean markdown structure with details for thoughts -->
                 <div class="flex flex-col gap-3">
@@ -1216,7 +1226,7 @@
             <span class="size-3.5 rounded bg-background flex items-center justify-center text-[8px] font-mono border border-border shrink-0 text-foreground mr-1">
               {#if selectedModel?.provider.includes('Google')}G{:else if selectedModel?.provider.includes('Anthropic')}A{:else if selectedModel?.provider.includes('Meta')}M{:else if selectedModel?.provider.includes('LMStudio')}LM{:else}L{/if}
             </span>
-            <span>{selectedModel?.name || selectedModel?.id}{thinkingEffort !== 'off' ? ` (${thinkingEffort})` : ''}</span>
+            <span>{selectedModel?.name || selectedModel?.id}{isThinkingSupported && thinkingEffort !== 'off' ? ` (${thinkingEffort})` : ''}</span>
             <ChevronDown class="size-3 text-gray-500 ml-1" />
           </button>
 
@@ -1272,6 +1282,7 @@
               </div>
 
               <!-- Thinking Effort Slider -->
+              {#if isThinkingSupported && thoughtLevels.length > 0}
               <div class="p-2.5 border-t border-border">
                 <div class="flex items-center justify-between mb-2">
                   <div class="flex items-center gap-1.5">
@@ -1280,33 +1291,34 @@
                   </div>
                   <span class="text-[10px] font-mono text-foreground capitalize">{thinkingEffort}</span>
                 </div>
-                <div class="relative h-5 flex items-center" onclick={(e) => e.stopPropagation()}>
+                <div class="relative h-5 flex items-center" onclick={(e) => e.stopPropagation()} role="group" aria-label="Thinking effort slider">
                   <!-- Track background -->
                   <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted-foreground/15"></div>
                   <!-- Filled track -->
-                  <div class="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-primary left-0 transition-all" style="width: {thinkingIdx * 25}%"></div>
+                  <div class="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-primary left-0 transition-all" style="width: {thoughtLevels.length > 1 ? thinkingIdx / (thoughtLevels.length - 1) * 100 : 0}%"></div>
                   <!-- Stop dots and clickable areas -->
-                  {#each thinkingLevels as level, i}
+                  {#each thoughtLevels as level, i}
                     <button
-                      onclick={() => { thinkingEffort = level; }}
+                      onclick={() => setThinkingLevel(level.value)}
                       class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-5 flex items-center justify-center cursor-pointer z-10"
-                      style="left: {i * 25}%"
-                      title={level}
+                      style="left: {thoughtLevels.length > 1 ? i / (thoughtLevels.length - 1) * 100 : 0}%"
+                      title={level.name}
                     >
                       <span class="size-2 rounded-full transition-all {i <= thinkingIdx ? 'bg-primary' : 'bg-muted-foreground/30'} {i === thinkingIdx ? 'size-3.5 bg-primary ring-2 ring-background shadow-sm' : ''}"></span>
                     </button>
                   {/each}
                 </div>
                 <div class="flex items-center justify-between mt-0.5">
-                  {#each thinkingLevels as level, i}
+                  {#each thoughtLevels as level, i}
                     <button
-                      onclick={(e) => { e.stopPropagation(); thinkingEffort = level; }}
+                      onclick={(e) => { e.stopPropagation(); setThinkingLevel(level.value); }}
                       class="text-[9px] font-mono capitalize cursor-pointer transition-colors {i === thinkingIdx ? 'text-foreground font-medium' : 'text-muted-foreground/50 hover:text-muted-foreground'}"
-                      style="width: 20%; text-align: {i === 0 ? 'left' : i === thinkingLevels.length - 1 ? 'right' : 'center'}"
-                    >{level}</button>
+                      style="width: {100 / thoughtLevels.length}%; text-align: {i === 0 ? 'left' : i === thoughtLevels.length - 1 ? 'right' : 'center'}"
+                    >{level.name}</button>
                   {/each}
                 </div>
               </div>
+              {/if}
             </div>
           {/if}
         </div>

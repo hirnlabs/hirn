@@ -7,6 +7,17 @@ export interface AcpModel {
   provider: string; // Header grouping e.g. "Anthropic (ACP)", "Local (GGUF)", "LMStudio", "Google (API)"
   description?: string;
   contextWindow?: number;
+  thinking?: {
+    supported: boolean;
+    levels?: ('off' | 'low' | 'mid' | 'high' | 'max')[];
+  };
+}
+
+/** Parsed from ACP configOptions where category === 'thought_level' */
+export interface ThoughtLevelConfig {
+  configId: string;
+  currentValue: string;
+  levels: { value: string; name: string }[];
 }
 
 export interface ToolCall {
@@ -16,6 +27,17 @@ export interface ToolCall {
   status: 'pending' | 'running' | 'completed' | 'failed';
   result?: string;
   error?: string;
+}
+
+export interface ErrorDetails {
+  source: 'stdio' | 'jsonrpc' | 'ipc' | 'connection' | 'agent';
+  message: string;
+  code?: number | string;
+  method?: string;
+  command?: string;
+  pid?: number | null;
+  rawPayload?: string;
+  suggestion?: string;
 }
 
 export interface ChatMessage {
@@ -29,6 +51,8 @@ export interface ChatMessage {
   latencyMs?: number;
   contextTokens?: number;
   maxContextTokens?: number;
+  isError?: boolean;
+  errorDetails?: ErrorDetails;
 }
 
 export interface AgentConfig {
@@ -52,4 +76,7 @@ export interface SessionData {
   createdAt: number;
   updatedAt: number;
   archived?: boolean;
+  cwd?: string;
+  /** Populated from ACP configOptions with category 'thought_level'. Null = agent doesn't support it. */
+  thoughtLevelConfig?: ThoughtLevelConfig | null;
 }

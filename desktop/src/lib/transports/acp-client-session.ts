@@ -1,39 +1,167 @@
-import type { AcpTransport, AcpMessageNotification } from './acp-transport';
-import type { AcpModel } from '../types/acp';
+import * as acp from '@agentclientprotocol/sdk';
+import type { AcpModel, ThoughtLevelConfig } from '../types/acp';
+import type { ExtendedAcpStream } from './tauri-ipc-transport';
+
+export type AcpNotificationCallback = (notif: {
+  type: 'thought' | 'text' | 'tool_call' | 'tool_result' | 'status' | 'error';
+  payload: any;
+}) => void;
+
+export interface AcpSessionResult {
+  models: AcpModel[];
+  thoughtLevelConfig: ThoughtLevelConfig | null;
+}
 
 export class AcpClientSession {
-  private transport: AcpTransport;
+  private stream: ExtendedAcpStream;
+  private connection: acp.ClientConnection | null = null;
   private isInitialized = false;
+  public sessionId: string | null = null;
   public fetchedModels: AcpModel[] = [];
+  public thoughtLevelConfig: ThoughtLevelConfig | null = null;
 
-  constructor(transport: AcpTransport) {
-    this.transport = transport;
+  constructor(stream: ExtendedAcpStream) {
+    this.stream = stream;
   }
 
-  async startSession(onNotification: (notif: AcpMessageNotification) => void): Promise<AcpModel[]> {
-    await this.transport.connect();
-    this.transport.onNotification(onNotification);
+  async startSession(onNotification: AcpNotificationCallback, cwd?: string): Promise<AcpSessionResult> {
+    const clientApp = acp
+      .client({ name: 'hirn-desktop' })
+      .onNotification(acp.methods.client.session.update, (ctx) => {
+        const update = ctx.params?.update as any;
+        if (!update) return;
 
-    const initResult = await this.transport.sendRequest('initialize', {
+        const sUpdate = update.sessionUpdate || update.type;
+
+        if (sUpdate === 'agent_thought_chunk' || update.thought) {
+          const text = update.content?.type === 'text' ? update.content.text : update.thought || update.content;
+          if (text) onNotification({ type: 'thought', payload: text });
+        } else if (sUpdate === 'agent_message_chunk' || update.text || update.delta) {
+          const text = update.content?.type === 'text' ? update.content.text : update.text || update.delta || update.content;
+          if (text) onNotification({ type: 'text', payload: text });
+        } else if (sUpdate === 'tool_call' || update.toolCall) {
+          onNotification({ type: 'tool_call', payload: update.toolCall || update });
+        } else if (update.error) {
+          onNotification({ type: 'error', payload: update.error });
+        }
+      })
+      .onRequest(acp.methods.client.session.requestPermission, async (ctx) => {
+        const firstOption = ctx.params.options?.[0]?.optionId || 'allow';
+        return {
+          outcome: {
+            outcome: 'selected',
+            optionId: firstOption
+          }
+        };
+      });
+
+    this.connection = clientApp.connect(this.stream);
+
+    const initResult = await this.connection.agent.request(acp.methods.agent.initialize, {
       clientInfo: { name: 'Hirn Desktop', version: '0.1.0' },
-      protocolVersion: '1.0.0'
+      protocolVersion: acp.PROTOCOL_VERSION
     });
 
-    if (initResult && initResult.models) {
-      this.fetchedModels = initResult.models;
+    let models: AcpModel[] = [];
+
+    if (initResult && Array.isArray((initResult as any).models) && (initResult as any).models.length > 0) {
+      models = (initResult as any).models;
     }
 
-    await this.transport.sendNotification('notifications/initialized', {});
-    this.isInitialized = true;
-    console.log('[AcpClientSession] Handshake initialized:', initResult);
+    try {
+      const workingDir = cwd || 'C:\\dev\\hirn';
+      const newSessionRes = await this.connection.agent.request(acp.methods.agent.session.new, {
+        cwd: workingDir,
+        mcpServers: []
+      });
 
-    return this.fetchedModels;
+      if (newSessionRes && newSessionRes.sessionId) {
+        this.sessionId = newSessionRes.sessionId;
+      }
+
+      if (newSessionRes && Array.isArray((newSessionRes as any).configOptions)) {
+        const configOptions = (newSessionRes as any).configOptions;
+
+        // Parse model config
+        const modelConfig = configOptions.find((c: any) => c.category === 'model' || c.id === 'model' || c.id === 'modelId');
+        if (modelConfig && modelConfig.type === 'select') {
+          const opts = modelConfig.options || [];
+          // Handle both flat options and grouped options
+          const flatOptions = opts.flatMap((o: any) => o.options ? o.options : [o]);
+          for (const opt of flatOptions) {
+            const mId = opt.value || opt.id;
+            if (mId && !models.some(m => m.id === mId)) {
+              models.push({
+                id: mId,
+                name: opt.name || mId,
+                provider: (opt as any).group || 'ACP Agent',
+                thinking: { supported: true }
+              });
+            }
+          }
+        }
+
+        // Parse thought_level config
+        const thoughtConfig = configOptions.find((c: any) => c.category === 'thought_level');
+        if (thoughtConfig && thoughtConfig.type === 'select') {
+          const opts = thoughtConfig.options || [];
+          const flatOptions = opts.flatMap((o: any) => o.options ? o.options : [o]);
+          this.thoughtLevelConfig = {
+            configId: thoughtConfig.id,
+            currentValue: thoughtConfig.currentValue || flatOptions[0]?.value || 'mid',
+            levels: flatOptions.map((o: any) => ({ value: o.value, name: o.name || o.value }))
+          };
+          console.log('[AcpClientSession] Thought level config:', this.thoughtLevelConfig);
+        }
+      }
+    } catch (e) {
+      console.log('[AcpClientSession] Note: session/new response skipped or optional:', e);
+    }
+
+    if (models.length === 0 && initResult && (initResult as any).agentInfo) {
+      const agentInfo = (initResult as any).agentInfo;
+      models.push({
+        id: `${agentInfo.name || 'hirn'}-default`,
+        name: `${agentInfo.title || agentInfo.name || 'Hirn Agent'} (v${agentInfo.version || '0.1'})`,
+        provider: 'ACP Agent',
+        thinking: { supported: false }
+      });
+    }
+
+    this.fetchedModels = models;
+    this.isInitialized = true;
+    console.log('[AcpClientSession] Connected natively via SDK with models:', this.fetchedModels, 'SessionId:', this.sessionId);
+
+    return { models: this.fetchedModels, thoughtLevelConfig: this.thoughtLevelConfig };
   }
 
-  async sendPrompt(promptText: string, modelId?: string): Promise<void> {
-    if (!this.isInitialized) {
+  async setConfigOption(configId: string, value: string): Promise<void> {
+    if (!this.connection || !this.sessionId) return;
+    try {
+      await this.connection.agent.request(acp.methods.agent.session.setConfigOption, {
+        sessionId: this.sessionId,
+        configId,
+        value
+      });
+    } catch (e) {
+      console.warn('[AcpClientSession] setConfigOption failed:', e);
+    }
+  }
+
+  async sendPrompt(promptText: string, modelId?: string, thinkingEffort?: string): Promise<void> {
+    if (!this.isInitialized || !this.connection) {
       throw new Error('ACP Client Session is not initialized.');
     }
-    await this.transport.sendRequest('session/prompt', { prompt: promptText, modelId });
+
+    const params: any = {
+      prompt: [{ type: 'text', text: promptText }],
+      modelId
+    };
+
+    if (this.sessionId) {
+      params.sessionId = this.sessionId;
+    }
+
+    await this.connection.agent.request(acp.methods.agent.session.prompt, params);
   }
 }
