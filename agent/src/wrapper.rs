@@ -69,6 +69,8 @@ pub fn run_goose_wrapper_with_args(mut pass_args: Vec<String>) -> Result<(), Box
     cmd.env("TMP", &temp_dir);
     cmd.env("TMPDIR", &temp_dir);
 
+    let is_acp_mode = pass_args.first().map(|s| s.as_str()) == Some("acp");
+
     let mut child = cmd
         .stdin(Stdio::inherit())
         .stdout(Stdio::piped())
@@ -78,15 +80,30 @@ pub fn run_goose_wrapper_with_args(mut pass_args: Vec<String>) -> Result<(), Box
     let child_stdout = child.stdout.take().unwrap();
     let child_stderr = child.stderr.take().unwrap();
 
-    // Spawn thread to process stdout
-    std::thread::spawn(move || {
-        process_stream(child_stdout, std::io::stdout());
-    });
+    if is_acp_mode {
+        // Pass stdout directly for ACP JSON-RPC stdio protocol
+        std::thread::spawn(move || {
+            let mut stdout = std::io::stdout();
+            let mut reader = child_stdout;
+            let _ = std::io::copy(&mut reader, &mut stdout);
+        });
 
-    // Spawn thread to process stderr
-    std::thread::spawn(move || {
-        process_stream(child_stderr, std::io::stderr());
-    });
+        std::thread::spawn(move || {
+            let mut stderr = std::io::stderr();
+            let mut reader = child_stderr;
+            let _ = std::io::copy(&mut reader, &mut stderr);
+        });
+    } else {
+        // Spawn thread to process stdout with rebranding
+        std::thread::spawn(move || {
+            process_stream(child_stdout, std::io::stdout());
+        });
+
+        // Spawn thread to process stderr
+        std::thread::spawn(move || {
+            process_stream(child_stderr, std::io::stderr());
+        });
+    }
 
     let status = child.wait()?;
     if let Some(code) = status.code() {

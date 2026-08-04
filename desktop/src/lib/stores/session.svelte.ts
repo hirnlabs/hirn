@@ -1,17 +1,8 @@
-import type { SessionData, ChatMessage, AgentStatus, AgentConfig, AcpModel } from '../types/acp';
-import { MockAcpTransport, type AcpTransport } from '../transports/acp-transport';
-import { TauriIpcTransport } from '../transports/tauri-ipc-transport';
-import { WebSocketAcpTransport } from '../transports/websocket-transport';
+import type { SessionData, ChatMessage, AgentStatus, AgentConfig, AcpModel, ErrorDetails } from '../types/acp';
+import { createMockAcpStream } from '../transports/acp-transport';
+import { createTauriIpcStream } from '../transports/tauri-ipc-transport';
+import { createWebSocketAcpStream } from '../transports/websocket-transport';
 import { AcpClientSession } from '../transports/acp-client-session';
-
-const DEFAULT_MODELS: AcpModel[] = [
-  { id: 'local/gemma-4-9b-it', name: 'gemma-4-9b-it', provider: 'Local (GGUF)' },
-  { id: 'local/qwen2.5-coder-7b', name: 'qwen2.5-coder-7b', provider: 'Local (GGUF)' },
-  { id: 'anthropic/claude-3-5-sonnet', name: 'claude-3.5-sonnet', provider: 'Anthropic (ACP)' },
-  { id: 'anthropic/claude-3-7-sonnet', name: 'claude-3.7-sonnet', provider: 'Anthropic (ACP)' },
-  { id: 'lmstudio/llama3.2-3b-instruct', name: 'llama3.2-3b-instruct', provider: 'LMStudio' },
-  { id: 'google/gemini-2.5-flash', name: 'gemini-2.5-flash', provider: 'Google (API)' }
-];
 
 export class SessionStore {
   sessions = $state<SessionData[]>([]);
@@ -27,34 +18,8 @@ export class SessionStore {
       { id: 'hirn-serve', name: 'Hirn Server (WS)', description: 'Localhost WebSocket Gateway', transportType: 'websocket', commandOrUrl: 'ws://localhost:3000/acp' }
     ];
 
-    this.sessions = [
-      {
-        id: 'sess-1',
-        title: 'Desktop Architecture & State Store',
-        agentId: 'hirn-local',
-        agentName: 'Hirn Agent (Local)',
-        selectedModelId: 'local/gemma-4-9b-it',
-        availableModels: DEFAULT_MODELS,
-        status: 'idle',
-        createdAt: Date.now() - 3600000,
-        updatedAt: Date.now() - 1800000,
-        messages: [
-          { id: 'm1', role: 'user', content: 'Design the Svelte 5 Runes state model for Desktop.', timestamp: Date.now() - 3600000 },
-          {
-            id: 'm2',
-            role: 'assistant',
-            content: 'I have designed the `SessionStore` class model with reactive `$state` fields.',
-            thoughts: 'Checking Svelte 5 runes documentation and local persistence contracts.',
-            toolCalls: [
-              { id: 't1', name: 'write_file', arguments: { path: 'src/lib/stores/session.svelte.ts' }, status: 'completed', result: 'File created successfully.' }
-            ],
-            timestamp: Date.now() - 3500000
-          }
-        ]
-      }
-    ];
-
-    this.activeSessionId = 'sess-1';
+    this.sessions = [];
+    this.activeSessionId = null;
   }
 
   get activeSession(): SessionData | null {
@@ -85,15 +50,20 @@ export class SessionStore {
   }
 
 
-  createSession(agentId: string, title?: string) {
+  createSession(agentId: string, title?: string, eagerConnect = true) {
     const agent = this.agents.find(a => a.id === agentId) ?? this.agents[0];
+    let initialModelId = '';
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('hirn_selected_model');
+      if (stored) initialModelId = stored;
+    }
     const newSession: SessionData = {
       id: `sess-${Date.now()}`,
       title: title || `Chat with ${agent.name}`,
       agentId: agent.id,
       agentName: agent.name,
-      selectedModelId: DEFAULT_MODELS[0].id,
-      availableModels: DEFAULT_MODELS,
+      selectedModelId: initialModelId,
+      availableModels: [],
       status: 'idle',
       messages: [],
       createdAt: Date.now(),
@@ -101,21 +71,179 @@ export class SessionStore {
     };
     this.sessions.unshift(newSession);
     this.activeSessionId = newSession.id;
+
+    if (eagerConnect) {
+      this.ensureClientSession(newSession.id).catch(err => {
+        console.warn('[SessionStore] Eager process connect failed:', err);
+      });
+    }
+
     return newSession;
   }
 
-  private createTransportForAgent(agent: AgentConfig): AcpTransport {
+  private async createStreamForAgent(agent: AgentConfig, onError?: (err: any) => void) {
     if (agent.transportType === 'tauri-ipc') {
-      return new TauriIpcTransport(agent.commandOrUrl);
+      return await createTauriIpcStream(agent.commandOrUrl, { onError });
     } else if (agent.transportType === 'websocket') {
-      return new WebSocketAcpTransport(agent.commandOrUrl);
+      return await createWebSocketAcpStream(agent.commandOrUrl, { onError });
     }
-    return new MockAcpTransport();
+    return createMockAcpStream();
+  }
+
+  private async ensureClientSession(sessionId: string): Promise<AcpClientSession> {
+    let clientSession = this.clientSessions.get(sessionId);
+    if (clientSession) return clientSession;
+
+    const session = this.sessions.find(s => s.id === sessionId);
+    const agent = this.agents.find(a => a.id === session?.agentId) || this.agents[0];
+
+    let currentAssistantMsg: ChatMessage | null = null;
+
+    try {
+      const stream = await this.createStreamForAgent(agent, (errDetails) => {
+        if (!session) return;
+        session.status = 'error';
+        session.messages.push({
+          id: `msg-err-${Date.now()}`,
+          role: 'assistant',
+          isError: true,
+          content: errDetails.message || 'Stream error encountered',
+          errorDetails: errDetails,
+          timestamp: Date.now()
+        });
+      });
+      clientSession = new AcpClientSession(stream);
+      this.clientSessions.set(sessionId, clientSession);
+
+      const result = await clientSession.startSession((notif) => {
+        if (!session) return;
+
+        if (notif.type === 'status') {
+          session.status = notif.payload;
+        } else if (notif.type === 'error') {
+          session.status = 'error';
+          const p = notif.payload;
+          const details: ErrorDetails = (typeof p === 'object' && p !== null) ? {
+            source: p.source || 'agent',
+            message: p.message || JSON.stringify(p),
+            code: p.code,
+            method: p.method,
+            command: p.command || agent.commandOrUrl,
+            pid: p.pid,
+            rawPayload: p.rawPayload,
+            suggestion: p.suggestion
+          } : {
+            source: 'agent',
+            message: String(p),
+            command: agent.commandOrUrl
+          };
+
+          const errMsg: ChatMessage = {
+            id: `msg-err-${Date.now()}`,
+            role: 'assistant',
+            isError: true,
+            content: details.message,
+            errorDetails: details,
+            timestamp: Date.now()
+          };
+          session.messages.push(errMsg);
+          currentAssistantMsg = null;
+        } else if (notif.type === 'thought') {
+          if (!currentAssistantMsg) {
+            currentAssistantMsg = {
+              id: `msg-${Date.now()}`,
+              role: 'assistant',
+              content: '',
+              thoughts: notif.payload,
+              timestamp: Date.now()
+            };
+            session.messages.push(currentAssistantMsg);
+          } else {
+            currentAssistantMsg.thoughts = (currentAssistantMsg.thoughts || '') + notif.payload;
+          }
+        } else if (notif.type === 'tool_call') {
+          if (!currentAssistantMsg) {
+            currentAssistantMsg = {
+              id: `msg-${Date.now()}`,
+              role: 'assistant',
+              content: '',
+              toolCalls: [notif.payload],
+              timestamp: Date.now()
+            };
+            session.messages.push(currentAssistantMsg);
+          } else {
+            currentAssistantMsg.toolCalls = currentAssistantMsg.toolCalls || [];
+            currentAssistantMsg.toolCalls.push(notif.payload);
+          }
+        } else if (notif.type === 'text') {
+          if (!currentAssistantMsg) {
+            currentAssistantMsg = {
+              id: `msg-${Date.now()}`,
+              role: 'assistant',
+              content: notif.payload,
+              timestamp: Date.now()
+            };
+            session.messages.push(currentAssistantMsg);
+          } else {
+            currentAssistantMsg.content = (currentAssistantMsg.content || '') + notif.payload;
+          }
+        }
+      }, session?.cwd);
+
+      if (session && result.models.length > 0) {
+        session.availableModels = result.models;
+        if (!session.selectedModelId || !session.availableModels.some(m => m.id === session.selectedModelId)) {
+          session.selectedModelId = result.models[0].id;
+        }
+      }
+      if (session) {
+        session.thoughtLevelConfig = result.thoughtLevelConfig;
+      }
+    } catch (err: any) {
+      console.warn(`[SessionStore] Connection or protocol error for agent ${agent.name}:`, err);
+      if (session) {
+        session.status = 'error';
+        session.messages.push({
+          id: `msg-err-${Date.now()}`,
+          role: 'assistant',
+          isError: true,
+          content: `Failed to establish connection with ${agent.name}: ${err?.message || err}`,
+          errorDetails: {
+            source: 'connection',
+            message: err?.message || String(err),
+            command: agent.commandOrUrl,
+            suggestion: 'Verify that the agent binary is installed and reachable.'
+          },
+          timestamp: Date.now()
+        });
+      }
+      const fallbackStream = createMockAcpStream();
+      clientSession = new AcpClientSession(fallbackStream);
+      this.clientSessions.set(sessionId, clientSession);
+      const fallbackResult = await clientSession.startSession(() => {}, session?.cwd);
+      if (session && fallbackResult.models.length > 0) {
+        session.availableModels = fallbackResult.models;
+      }
+    }
+
+    return clientSession;
+  }
+
+  async setThinkingLevel(sessionId: string, value: string) {
+    const session = this.sessions.find(s => s.id === sessionId);
+    if (!session?.thoughtLevelConfig) return;
+
+    const clientSession = this.clientSessions.get(sessionId);
+    if (!clientSession) return;
+
+    await clientSession.setConfigOption(session.thoughtLevelConfig.configId, value);
+    session.thoughtLevelConfig = { ...session.thoughtLevelConfig, currentValue: value };
   }
 
   async sendMessage(sessionId: string, text: string) {
     const session = this.sessions.find(s => s.id === sessionId);
     if (!session) return;
+    const agent = this.agents.find(a => a.id === session.agentId) || this.agents[0];
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -127,76 +255,24 @@ export class SessionStore {
     session.status = 'working';
     session.updatedAt = Date.now();
 
-    let clientSession = this.clientSessions.get(sessionId);
-    if (!clientSession) {
-      const agent = this.agents.find(a => a.id === session.agentId) || this.agents[0];
-      const transport = this.createTransportForAgent(agent);
-      clientSession = new AcpClientSession(transport);
-      this.clientSessions.set(sessionId, clientSession);
-
-      let currentAssistantMsg: ChatMessage | null = null;
-
-      try {
-        const fetchedModels = await clientSession.startSession((notif) => {
-          if (notif.type === 'status') {
-            session.status = notif.payload;
-          } else if (notif.type === 'thought') {
-            if (!currentAssistantMsg) {
-              currentAssistantMsg = {
-                id: `msg-${Date.now()}`,
-                role: 'assistant',
-                content: '',
-                thoughts: notif.payload,
-                timestamp: Date.now()
-              };
-              session.messages.push(currentAssistantMsg);
-            } else {
-              currentAssistantMsg.thoughts = notif.payload;
-            }
-          } else if (notif.type === 'tool_call') {
-            if (!currentAssistantMsg) {
-              currentAssistantMsg = {
-                id: `msg-${Date.now()}`,
-                role: 'assistant',
-                content: '',
-                toolCalls: [notif.payload],
-                timestamp: Date.now()
-              };
-              session.messages.push(currentAssistantMsg);
-            } else {
-              currentAssistantMsg.toolCalls = currentAssistantMsg.toolCalls || [];
-              currentAssistantMsg.toolCalls.push(notif.payload);
-            }
-          } else if (notif.type === 'text') {
-            if (!currentAssistantMsg) {
-              currentAssistantMsg = {
-                id: `msg-${Date.now()}`,
-                role: 'assistant',
-                content: notif.payload,
-                timestamp: Date.now()
-              };
-              session.messages.push(currentAssistantMsg);
-            } else {
-              currentAssistantMsg.content = notif.payload;
-            }
-          }
-        });
-
-        if (fetchedModels && fetchedModels.length > 0) {
-          session.availableModels = fetchedModels;
-        }
-      } catch (err) {
-        console.warn(`[SessionStore] Failed to connect to agent ${agent.name}, falling back to mock transport:`, err);
-        const fallbackTransport = new MockAcpTransport();
-        clientSession = new AcpClientSession(fallbackTransport);
-        this.clientSessions.set(sessionId, clientSession);
-        const fetchedModels = await clientSession.startSession(() => {});
-        if (fetchedModels && fetchedModels.length > 0) {
-          session.availableModels = fetchedModels;
-        }
-      }
+    try {
+      const clientSession = await this.ensureClientSession(sessionId);
+      await clientSession.sendPrompt(text, session.selectedModelId);
+    } catch (err: any) {
+      session.status = 'error';
+      session.messages.push({
+        id: `msg-prompt-err-${Date.now()}`,
+        role: 'assistant',
+        isError: true,
+        content: `Prompt Execution Failed: ${err?.message || err}`,
+        errorDetails: {
+          source: 'jsonrpc',
+          message: err?.message || String(err),
+          method: 'session/prompt',
+          command: agent?.commandOrUrl
+        },
+        timestamp: Date.now()
+      });
     }
-
-    await clientSession.sendPrompt(text, session.selectedModelId);
   }
 }
