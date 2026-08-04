@@ -1407,7 +1407,7 @@
             onclick={toggleAttachMenu}
             title="Attach files or folders"
           >
-            <Paperclip class="size-4" />
+            <Paperclip data-icon="inline-start" />
           </InputGroup.Button>
 
           {#if isAttachMenuOpen}
@@ -1434,7 +1434,7 @@
           onclick={handleSubmit}
           title="Send Message"
         >
-          <ArrowUpIcon class="size-4" />
+          <ArrowUpIcon data-icon="inline-start" />
           <span class="sr-only">Send</span>
         </InputGroup.Button>
       </div>

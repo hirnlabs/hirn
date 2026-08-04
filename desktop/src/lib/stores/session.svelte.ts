@@ -4,6 +4,15 @@ import { TauriIpcTransport } from '../transports/tauri-ipc-transport';
 import { WebSocketAcpTransport } from '../transports/websocket-transport';
 import { AcpClientSession } from '../transports/acp-client-session';
 
+const DEFAULT_MODELS: AcpModel[] = [
+  { id: 'local/gemma-4-9b-it', name: 'gemma-4-9b-it', provider: 'Local (GGUF)' },
+  { id: 'local/qwen2.5-coder-7b', name: 'qwen2.5-coder-7b', provider: 'Local (GGUF)' },
+  { id: 'anthropic/claude-3-5-sonnet', name: 'claude-3.5-sonnet', provider: 'Anthropic (ACP)' },
+  { id: 'anthropic/claude-3-7-sonnet', name: 'claude-3.7-sonnet', provider: 'Anthropic (ACP)' },
+  { id: 'lmstudio/llama3.2-3b-instruct', name: 'llama3.2-3b-instruct', provider: 'LMStudio' },
+  { id: 'google/gemini-2.5-flash', name: 'gemini-2.5-flash', provider: 'Google (API)' }
+];
+
 export class SessionStore {
   sessions = $state<SessionData[]>([]);
   activeSessionId = $state<string | null>(null);
@@ -18,15 +27,6 @@ export class SessionStore {
       { id: 'hirn-serve', name: 'Hirn Server (WS)', description: 'Localhost WebSocket Gateway', transportType: 'websocket', commandOrUrl: 'ws://localhost:3000/acp' }
     ];
 
-    const defaultModels: AcpModel[] = [
-      { id: 'local/gemma-4-9b-it', name: 'gemma-4-9b-it', provider: 'Local (GGUF)' },
-      { id: 'local/qwen2.5-coder-7b', name: 'qwen2.5-coder-7b', provider: 'Local (GGUF)' },
-      { id: 'anthropic/claude-3-5-sonnet', name: 'claude-3.5-sonnet', provider: 'Anthropic (ACP)' },
-      { id: 'anthropic/claude-3-7-sonnet', name: 'claude-3.7-sonnet', provider: 'Anthropic (ACP)' },
-      { id: 'lmstudio/llama3.2-3b-instruct', name: 'llama3.2-3b-instruct', provider: 'LMStudio' },
-      { id: 'google/gemini-2.5-flash', name: 'gemini-2.5-flash', provider: 'Google (API)' }
-    ];
-
     this.sessions = [
       {
         id: 'sess-1',
@@ -34,7 +34,7 @@ export class SessionStore {
         agentId: 'hirn-local',
         agentName: 'Hirn Agent (Local)',
         selectedModelId: 'local/gemma-4-9b-it',
-        availableModels: defaultModels,
+        availableModels: DEFAULT_MODELS,
         status: 'idle',
         createdAt: Date.now() - 3600000,
         updatedAt: Date.now() - 1800000,
@@ -87,21 +87,13 @@ export class SessionStore {
 
   createSession(agentId: string, title?: string) {
     const agent = this.agents.find(a => a.id === agentId) ?? this.agents[0];
-    const defaultModels: AcpModel[] = [
-      { id: 'local/gemma-4-9b-it', name: 'gemma-4-9b-it', provider: 'Local (GGUF)' },
-      { id: 'local/qwen2.5-coder-7b', name: 'qwen2.5-coder-7b', provider: 'Local (GGUF)' },
-      { id: 'anthropic/claude-3-5-sonnet', name: 'claude-3.5-sonnet', provider: 'Anthropic (ACP)' },
-      { id: 'anthropic/claude-3-7-sonnet', name: 'claude-3.7-sonnet', provider: 'Anthropic (ACP)' },
-      { id: 'lmstudio/llama3.2-3b-instruct', name: 'llama3.2-3b-instruct', provider: 'LMStudio' },
-      { id: 'google/gemini-2.5-flash', name: 'gemini-2.5-flash', provider: 'Google (API)' }
-    ];
     const newSession: SessionData = {
       id: `sess-${Date.now()}`,
       title: title || `Chat with ${agent.name}`,
       agentId: agent.id,
       agentName: agent.name,
-      selectedModelId: 'local/gemma-4-9b-it',
-      availableModels: defaultModels,
+      selectedModelId: DEFAULT_MODELS[0].id,
+      availableModels: DEFAULT_MODELS,
       status: 'idle',
       messages: [],
       createdAt: Date.now(),

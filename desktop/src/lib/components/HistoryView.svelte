@@ -46,17 +46,20 @@
           </Card.Header>
           <Card.Content class="flex items-center justify-end gap-2 pt-2">
             <Button variant="ghost" size="sm" class="text-xs text-muted-foreground hover:text-destructive" onclick={() => store.archiveSession(session.id)}>
-              <Archive class="size-3.5 mr-1" />
+              <Archive data-icon="inline-start" />
               Archive
             </Button>
             <Button variant="secondary" size="sm" class="text-xs" onclick={() => openSession(session.id)}>
-              <MessageSquare class="size-3.5 mr-1" />
+              <MessageSquare data-icon="inline-start" />
               Open
             </Button>
           </Card.Content>
         </Card.Root>
       {:else}
-        <p class="text-xs text-muted-foreground col-span-2 py-4">No active sessions found.</p>
+        <div class="col-span-2 flex flex-col items-center justify-center p-8 border border-dashed rounded-xl text-center text-muted-foreground gap-1 bg-muted/20">
+          <MessageSquare class="size-6 opacity-40 mb-1" />
+          <p class="text-xs font-medium">No active sessions found.</p>
+        </div>
       {/each}
     </div>
   </div>
@@ -83,7 +86,7 @@
             </Card.Header>
             <Card.Content class="flex items-center justify-end gap-2 pt-2">
               <Button variant="outline" size="sm" class="text-xs" onclick={() => store.unarchiveSession(session.id)}>
-                <RefreshCw class="size-3.5 mr-1" />
+                <RefreshCw data-icon="inline-start" />
                 Unarchive
               </Button>
             </Card.Content>

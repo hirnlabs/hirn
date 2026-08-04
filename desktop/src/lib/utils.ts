@@ -6,8 +6,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export type WithElementRef<T extends Record<string, any> = Record<string, any>, P extends object = object> = P & T & {
-  ref?: any;
+export type WithElementRef<T extends Record<string, any> = Record<string, any>, Element = HTMLElement> = T & {
+  ref?: Element | null;
   children?: Snippet;
 };
 

@@ -21,7 +21,7 @@
   <div class="flex flex-col gap-4">
     {#each models as model}
       <Card.Root>
-        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card.Header class="flex flex-row items-center justify-between gap-2 pb-2">
           <Card.Title class="text-sm font-semibold font-mono">{model.name}</Card.Title>
           <Badge variant={model.status === 'loaded' ? 'default' : 'secondary'} class="text-[10px] uppercase font-mono tracking-wider">
             {model.status}

@@ -1,21 +1,22 @@
 <script lang="ts">
   import type { ToolCall } from '../types/acp';
+  import * as Card from '$lib/components/ui/card';
   import { ChevronDown, Play, Check, X, Circle } from '@lucide/svelte';
 
   let { toolCall }: { toolCall: ToolCall } = $props();
   let expanded = $state(false);
 </script>
 
-<div class="bg-muted/40 border border-border/60 rounded-xl overflow-hidden text-xs my-2 transition-all">
+<Card.Root class="my-2 overflow-hidden text-xs transition-all bg-muted/30">
   <button 
     class="w-full flex items-center gap-2.5 px-3.5 py-2.5 bg-muted/60 hover:bg-muted text-left transition-colors font-medium border-none outline-none cursor-pointer"
     onclick={() => expanded = !expanded}
   >
     <span class="flex items-center justify-center shrink-0">
       {#if toolCall.status === 'running'}
-        <Play class="size-3.5 text-blue-500 animate-pulse fill-blue-500/20" />
+        <Play class="size-3.5 text-primary animate-pulse fill-primary/20" />
       {:else if toolCall.status === 'completed'}
-        <Check class="size-3.5 text-emerald-500 font-bold" />
+        <Check class="size-3.5 text-primary font-bold" />
       {:else if toolCall.status === 'failed'}
         <X class="size-3.5 text-destructive font-bold" />
       {:else}
@@ -27,7 +28,7 @@
   </button>
 
   {#if expanded}
-    <div class="px-3.5 py-3 bg-muted/20 border-t border-border/40 flex flex-col gap-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
+    <Card.Content class="px-3.5 py-3 bg-muted/20 border-t border-border/40 flex flex-col gap-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
       <div class="flex flex-col gap-1">
         <span class="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/80 font-sans">Input Parameters</span>
         <pre class="bg-muted/55 border border-border/30 rounded-lg p-2.5 overflow-x-auto text-[10px] font-mono text-foreground/90 max-h-[160px]"><code>{JSON.stringify(toolCall.arguments, null, 2)}</code></pre>
@@ -46,6 +47,6 @@
           <pre class="bg-destructive/5 border border-destructive/20 rounded-lg p-2.5 overflow-x-auto text-[10px] font-mono text-destructive max-h-[200px]"><code>{toolCall.error}</code></pre>
         </div>
       {/if}
-    </div>
+    </Card.Content>
   {/if}
-</div>
+</Card.Root>

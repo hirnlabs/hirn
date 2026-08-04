@@ -1,21 +1,25 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { SessionStore } from '../stores/session.svelte';
+  import * as Sidebar from '$lib/components/ui/sidebar';
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+  import * as Dialog from '$lib/components/ui/dialog';
+  import * as Field from '$lib/components/ui/field';
   import { Button } from '$lib/components/ui/button';
-  import * as Select from '$lib/components/ui/select';
-  import { Badge } from '$lib/components/ui/badge';
+  import { Input } from '$lib/components/ui/input';
   import { 
     MessageSquare, 
     Plus, 
-    Mic,
-    PanelLeftClose, 
-    PanelLeft, 
+    Mic, 
     Settings, 
     Cpu, 
     Bot, 
-    Boxes,
-    Archive,
-    History
+    Boxes, 
+    Archive, 
+    History, 
+    Folder, 
+    ChevronsUpDown, 
+    Check 
   } from '@lucide/svelte';
 
   let { store, activeNav = $bindable('sessions') }: {
@@ -23,15 +27,47 @@
     activeNav: 'sessions' | 'apps' | 'agents' | 'models' | 'settings' | 'history';
   } = $props();
 
-  let collapsed = $state(false);
+  const sidebar = Sidebar.useSidebar();
+
   let preferVoiceInput = $state(false);
 
   let workspaces = $state([
-    { id: 'ws-1', name: 'hirnlabs/hirn' },
-    { id: 'ws-2', name: 'Personal Projects' },
-    { id: 'ws-3', name: 'Research Lab' }
+    { id: 'ws-1', name: 'hirnlabs/hirn', path: '.hirn/workspaces/hirnlabs-hirn' },
+    { id: 'ws-2', name: 'Personal Projects', path: '.hirn/workspaces/personal-projects' },
+    { id: 'ws-3', name: 'Research Lab', path: '.hirn/workspaces/research-lab' }
   ]);
   let activeWorkspaceId = $state('ws-1');
+
+  let isCreateWorkspaceDialogOpen = $state(false);
+  let newWsName = $state('');
+  let newWsFolder = $state('');
+  let userCustomizedFolder = $state(false);
+
+  function handleNameInput(e: Event) {
+    const name = (e.target as HTMLInputElement).value;
+    newWsName = name;
+    if (!userCustomizedFolder) {
+      const slug = name.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-');
+      newWsFolder = slug ? `.hirn/workspaces/${slug}` : '';
+    }
+  }
+
+  function handleCreateWorkspace() {
+    if (!newWsName.trim()) return;
+    const slug = newWsName.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-');
+    const path = newWsFolder.trim() || `.hirn/workspaces/${slug || 'workspace'}`;
+    const newWs = {
+      id: `ws-${Date.now()}`,
+      name: newWsName.trim(),
+      path
+    };
+    workspaces.push(newWs);
+    activeWorkspaceId = newWs.id;
+    newWsName = '';
+    newWsFolder = '';
+    userCustomizedFolder = false;
+    isCreateWorkspaceDialogOpen = false;
+  }
 
   onMount(() => {
     if (typeof localStorage !== 'undefined') {
@@ -61,7 +97,6 @@
 
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
-
     const unarchived = store.sessions.filter(s => !s.archived);
 
     unarchived.forEach(session => {
@@ -87,38 +122,58 @@
   );
 </script>
 
-<aside class="flex flex-col bg-sidebar h-screen transition-all duration-300 select-none border-r border-sidebar-border text-sidebar-foreground {collapsed ? 'w-[60px]' : 'w-[260px]'}">
-  <!-- Top header bar -->
-  <div class="flex items-center justify-between p-3 gap-2 border-b border-sidebar-border/40">
-    {#if !collapsed}
-      <!-- Collapse Icon on the LEFT -->
-      <Button 
-        variant="ghost" 
-        size="icon"
-        class="size-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg shrink-0"
-        onclick={() => collapsed = !collapsed}
-        title="Collapse Sidebar"
-      >
-        <PanelLeftClose class="size-4" />
-      </Button>
+<Sidebar.Root collapsible="icon" class="select-none">
+  <!-- Header with SidebarTrigger, Workspace Dropdown, and Action Button in single title bar row -->
+  <Sidebar.Header class="h-12 p-2 flex-row items-center gap-1.5 border-b border-sidebar-border/40 shrink-0">
+    <Sidebar.Trigger class="size-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg shrink-0" />
 
-      <!-- Workspace Selector in middle -->
+    {#if sidebar.state === 'expanded'}
+      <!-- Workspace Selector Dropdown in Middle -->
       <div class="flex-1 min-w-0">
-        <Select.Root type="single" bind:value={activeWorkspaceId}>
-          <Select.Trigger class="w-full h-8 text-xs font-semibold bg-sidebar text-sidebar-foreground border-sidebar-border truncate">
-            {activeWorkspaceLabel}
-          </Select.Trigger>
-          <Select.Content class="bg-popover text-popover-foreground border-border">
-            {#each workspaces as ws}
-              <Select.Item value={ws.id} label={ws.name} class="text-xs font-medium cursor-pointer">
-                {ws.name}
-              </Select.Item>
-            {/each}
-          </Select.Content>
-        </Select.Root>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger class="w-full h-8 text-xs font-normal bg-sidebar hover:bg-sidebar-accent/60 text-sidebar-foreground border border-sidebar-border/80 rounded-lg px-2 flex items-center justify-between gap-1 transition-colors outline-none cursor-pointer">
+            <div class="flex items-center gap-1.5 min-w-0 flex-1">
+              <Folder class="size-3.5 text-sidebar-foreground/60 shrink-0" />
+              <span class="truncate font-medium text-left">{activeWorkspaceLabel}</span>
+            </div>
+            <ChevronsUpDown class="size-3 text-sidebar-foreground/50 shrink-0" />
+          </DropdownMenu.Trigger>
+
+          <DropdownMenu.Content align="center" class="w-56 bg-popover text-popover-foreground border-border shadow-xl rounded-xl p-1 z-50">
+            <DropdownMenu.Group>
+              <DropdownMenu.GroupHeading class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1 font-mono">
+                Workspaces
+              </DropdownMenu.GroupHeading>
+              {#each workspaces as ws}
+                <DropdownMenu.Item 
+                  onclick={() => activeWorkspaceId = ws.id}
+                  class="flex items-center justify-between px-2 py-1.5 text-xs rounded-lg cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors {activeWorkspaceId === ws.id ? 'bg-accent/60 font-medium' : ''}"
+                >
+                  <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <Folder class="size-3.5 text-muted-foreground shrink-0" />
+                    <span class="truncate font-normal">{ws.name}</span>
+                  </div>
+                  {#if activeWorkspaceId === ws.id}
+                    <Check class="size-3.5 text-primary shrink-0 ml-1" />
+                  {/if}
+                </DropdownMenu.Item>
+              {/each}
+            </DropdownMenu.Group>
+
+            <DropdownMenu.Separator class="my-1 bg-border/60" />
+
+            <DropdownMenu.Item 
+              onclick={() => isCreateWorkspaceDialogOpen = true}
+              class="flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
+            >
+              <Plus class="size-3.5 shrink-0" />
+              <span>Create New Workspace...</span>
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
       </div>
 
-      <!-- Action button on the RIGHT -->
+      <!-- Action Button on Right -->
       {#if preferVoiceInput}
         <Button 
           variant="default" 
@@ -140,180 +195,184 @@
           <Plus class="size-4" />
         </Button>
       {/if}
-    {:else}
-      <!-- Collapsed header bar -->
-      <div class="w-full flex items-center justify-between gap-1">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          class="size-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg shrink-0"
-          onclick={() => collapsed = !collapsed}
-          title="Expand Sidebar"
-        >
-          <PanelLeft class="size-4" />
-        </Button>
-
-        {#if preferVoiceInput}
-          <Button 
-            variant="default" 
-            size="icon"
-            class="size-8 bg-primary text-primary-foreground hover:bg-primary/90 shadow font-bold rounded-lg shrink-0"
-            onclick={() => handleNewSession(true)}
-            title="New Voice Session"
-          >
-            <Mic class="size-4 stroke-[2.5]" />
-          </Button>
-        {:else}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            class="size-8 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-lg shrink-0"
-            onclick={() => handleNewSession(false)}
-            title="New Session"
-          >
-            <Plus class="size-4" />
-          </Button>
-        {/if}
-      </div>
     {/if}
-  </div>
+  </Sidebar.Header>
 
-  <!-- Session List area -->
-  <div class="flex-1 overflow-y-auto px-2 py-1">
-    {#if collapsed}
-      <div class="flex flex-col items-center gap-1">
-        {#each store.sessions.filter(s => !s.archived) as session}
-          <button
-            onclick={() => {
-              activeNav = 'sessions';
-              store.selectSession(session.id);
-            }}
-            class="flex items-center justify-center size-8 rounded-lg transition-all relative {activeNav === 'sessions' && store.activeSessionId === session.id ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
-            title={session.title}
-          >
-            <div class="relative">
-              <MessageSquare class="size-3.5" />
-              <span class="absolute -top-0.5 -right-0.5 size-1.5 rounded-full border border-sidebar {session.status === 'working' ? 'bg-blue-500' : session.status === 'waiting_for_input' ? 'bg-amber-400' : session.status === 'error' ? 'bg-destructive' : 'bg-emerald-500'}" title={session.status}></span>
-            </div>
-          </button>
-        {/each}
-
-        <!-- New Session item inside collapsed scrollable list -->
-        <button
-          onclick={() => handleNewSession(false)}
-          class="flex items-center justify-center size-8 rounded-lg transition-all hover:bg-sidebar-accent/50 text-sidebar-foreground/70 hover:text-sidebar-foreground cursor-pointer"
-          title="New Session"
-        >
-          <Plus class="size-3.5 text-sidebar-foreground/60" />
-        </button>
-      </div>
-    {:else}
-      <div class="flex flex-col gap-2">
-        {#each groupedSessions as group}
-          <div class="flex flex-col gap-0.5">
-            <div class="text-[10px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider px-2 py-0.5">
-              {group.label}
-            </div>
-            <div class="flex flex-col gap-0.5">
-              {#each group.items as session}
-                <div
+  <!-- Sidebar Content with Session Groups -->
+  <Sidebar.Content>
+    {#each groupedSessions as group}
+      <Sidebar.Group>
+        <Sidebar.GroupLabel class="text-[10px] font-medium text-sidebar-foreground/50 uppercase tracking-wider font-mono">
+          {group.label}
+        </Sidebar.GroupLabel>
+        <Sidebar.GroupContent>
+          <Sidebar.Menu>
+            {#each group.items as session}
+              <Sidebar.MenuItem>
+                <Sidebar.MenuButton
+                  isActive={activeNav === 'sessions' && store.activeSessionId === session.id}
                   onclick={() => {
                     activeNav = 'sessions';
                     store.selectSession(session.id);
                   }}
-                  onkeydown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      activeNav = 'sessions';
-                      store.selectSession(session.id);
-                    }
-                  }}
-                  role="button"
-                  tabindex="0"
-                  class="group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs text-left transition-all cursor-pointer {activeNav === 'sessions' && store.activeSessionId === session.id ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/80'}"
+                  tooltipContent={session.title}
+                  class="group/item flex items-center justify-between text-xs font-medium"
                 >
                   <div class="flex items-center gap-2.5 min-w-0 flex-1">
                     <div class="relative shrink-0">
-                      <MessageSquare class="size-3.5 text-sidebar-foreground/60 group-hover:text-sidebar-foreground transition-colors" />
-                      <span class="absolute -top-0.5 -right-0.5 size-1.5 rounded-full border border-sidebar {session.status === 'working' ? 'bg-blue-500' : session.status === 'waiting_for_input' ? 'bg-amber-400' : session.status === 'error' ? 'bg-destructive' : 'bg-emerald-500'}" title={session.status}></span>
+                      <MessageSquare class="size-4 text-sidebar-foreground/70 group-hover/item:text-sidebar-foreground transition-colors" />
+                      <span class="absolute -top-0.5 -right-0.5 size-1.5 rounded-full border border-sidebar {session.status === 'working' ? 'bg-primary' : session.status === 'waiting_for_input' ? 'bg-chart-2' : session.status === 'error' ? 'bg-destructive' : 'bg-primary/70'}" title={session.status}></span>
                     </div>
-                    <span class="truncate flex-1">{session.title}</span>
+                    <span class="truncate text-xs font-medium">{session.title}</span>
                   </div>
 
-                  <!-- Archive button on hover -->
-                  <button
-                    onclick={(e) => {
-                      e.stopPropagation();
-                      store.archiveSession(session.id);
-                    }}
-                    class="opacity-0 group-hover:opacity-100 p-0.5 text-sidebar-foreground/50 hover:text-destructive hover:bg-sidebar-accent rounded transition-all shrink-0 cursor-pointer"
-                    title="Archive Chat"
-                  >
-                    <Archive class="size-3" />
-                  </button>
-                </div>
-              {/each}
-            </div>
-          </div>
-        {/each}
+                  {#if sidebar.state === 'expanded'}
+                    <Sidebar.MenuAction
+                      onclick={(e) => {
+                        e.stopPropagation();
+                        store.archiveSession(session.id);
+                      }}
+                      title="Archive Chat"
+                      class="opacity-0 group-hover/item:opacity-100 hover:text-destructive transition-opacity"
+                    >
+                      <Archive class="size-3.5" />
+                    </Sidebar.MenuAction>
+                  {/if}
+                </Sidebar.MenuButton>
+              </Sidebar.MenuItem>
+            {/each}
+          </Sidebar.Menu>
+        </Sidebar.GroupContent>
+      </Sidebar.Group>
+    {/each}
 
-        <!-- New Session item inside expanded scrollable list (no static background, compact spacing) -->
-        <button
-          onclick={() => handleNewSession(false)}
-          class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs text-left transition-all cursor-pointer hover:bg-sidebar-accent/50 text-sidebar-foreground/70 hover:text-sidebar-foreground font-medium"
-          title="New Session"
+    <!-- New Session Action -->
+    <Sidebar.Group>
+      <Sidebar.Menu>
+        <Sidebar.MenuItem>
+          <Sidebar.MenuButton
+            onclick={() => handleNewSession(false)}
+            tooltipContent="New Session"
+            class="text-xs font-medium"
+          >
+            <Plus class="size-4 text-sidebar-foreground/70 shrink-0" />
+            <span class="text-xs font-medium">New Session</span>
+          </Sidebar.MenuButton>
+        </Sidebar.MenuItem>
+      </Sidebar.Menu>
+    </Sidebar.Group>
+  </Sidebar.Content>
+
+  <!-- Sidebar Footer with Bottom Navigation -->
+  <Sidebar.Footer class="border-t border-sidebar-border/40 p-2">
+    <Sidebar.Menu>
+      <Sidebar.MenuItem>
+        <Sidebar.MenuButton
+          isActive={activeNav === 'history'}
+          onclick={() => activeNav = 'history'}
+          tooltipContent="History & Archives"
+          class="text-xs font-medium"
         >
-          <Plus class="size-3.5 text-sidebar-foreground/60 shrink-0" />
-          <span class="truncate">New Session</span>
-        </button>
-      </div>
-    {/if}
-  </div>
+          <History class="size-4 shrink-0" />
+          <span class="text-xs font-medium">History</span>
+        </Sidebar.MenuButton>
+      </Sidebar.MenuItem>
 
-  <!-- Bottom Navigation Row -->
-  <div class="flex flex-col gap-0.5 p-2 border-t border-sidebar-border/40 bg-sidebar">
-    <button
-      onclick={() => activeNav = 'history'}
-      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'history' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
-      title="History & Archives"
-    >
-      <History class="size-4 shrink-0" />
-      {#if !collapsed}<span class="truncate text-left flex-1">History</span>{/if}
-    </button>
+      <Sidebar.MenuItem>
+        <Sidebar.MenuButton
+          isActive={activeNav === 'apps'}
+          onclick={() => activeNav = 'apps'}
+          tooltipContent="Apps, Tools & Skills"
+          class="text-xs font-medium"
+        >
+          <Boxes class="size-4 shrink-0" />
+          <span class="text-xs font-medium">Apps, Tools & Skills</span>
+        </Sidebar.MenuButton>
+      </Sidebar.MenuItem>
 
-    <button
-      onclick={() => activeNav = 'apps'}
-      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'apps' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
-      title="Apps, Tools & Skills"
-    >
-      <Boxes class="size-4 shrink-0" />
-      {#if !collapsed}<span class="truncate text-left flex-1">Apps, Tools & Skills</span>{/if}
-    </button>
+      <Sidebar.MenuItem>
+        <Sidebar.MenuButton
+          isActive={activeNav === 'agents'}
+          onclick={() => activeNav = 'agents'}
+          tooltipContent="Agents & Providers"
+          class="text-xs font-medium"
+        >
+          <Bot class="size-4 shrink-0" />
+          <span class="text-xs font-medium">Agents & Providers</span>
+        </Sidebar.MenuButton>
+      </Sidebar.MenuItem>
 
-    <button
-      onclick={() => activeNav = 'agents'}
-      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'agents' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
-      title="Agents & Providers"
-    >
-      <Bot class="size-4 shrink-0" />
-      {#if !collapsed}<span class="truncate text-left flex-1">Agents & Providers</span>{/if}
-    </button>
+      <Sidebar.MenuItem>
+        <Sidebar.MenuButton
+          isActive={activeNav === 'models'}
+          onclick={() => activeNav = 'models'}
+          tooltipContent="Model Configuration"
+          class="text-xs font-medium"
+        >
+          <Cpu class="size-4 shrink-0" />
+          <span class="text-xs font-medium">Model Configuration</span>
+        </Sidebar.MenuButton>
+      </Sidebar.MenuItem>
 
-    <button
-      onclick={() => activeNav = 'models'}
-      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'models' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
-      title="Model Configuration"
-    >
-      <Cpu class="size-4 shrink-0" />
-      {#if !collapsed}<span class="truncate text-left flex-1">Model Configuration</span>{/if}
-    </button>
+      <Sidebar.MenuItem>
+        <Sidebar.MenuButton
+          isActive={activeNav === 'settings'}
+          onclick={() => activeNav = 'settings'}
+          tooltipContent="Settings"
+          class="text-xs font-medium"
+        >
+          <Settings class="size-4 shrink-0" />
+          <span class="text-xs font-medium">Settings</span>
+        </Sidebar.MenuButton>
+      </Sidebar.MenuItem>
+    </Sidebar.Menu>
+  </Sidebar.Footer>
 
-    <button
-      onclick={() => activeNav = 'settings'}
-      class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all {activeNav === 'settings' ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : 'hover:bg-sidebar-accent/50 text-sidebar-foreground/70'}"
-      title="Settings"
-    >
-      <Settings class="size-4 shrink-0" />
-      {#if !collapsed}<span class="truncate text-left flex-1">Settings</span>{/if}
-    </button>
-  </div>
-</aside>
+  <Sidebar.Rail />
+</Sidebar.Root>
+
+<!-- Create Workspace Dialog Modal -->
+<Dialog.Root bind:open={isCreateWorkspaceDialogOpen}>
+  <Dialog.Content class="sm:max-w-[425px]">
+    <Dialog.Header>
+      <Dialog.Title class="text-base font-bold">Create Workspace</Dialog.Title>
+      <Dialog.Description class="text-xs text-muted-foreground">
+        Set up a new workspace context for your agent sessions, local search index, and document sync.
+      </Dialog.Description>
+    </Dialog.Header>
+
+    <Field.FieldGroup class="flex flex-col gap-4 py-3">
+      <Field.Field>
+        <Field.FieldLabel for="ws-name" class="text-xs font-medium">Workspace Name</Field.FieldLabel>
+        <Input 
+          id="ws-name" 
+          type="text"
+          value={newWsName}
+          oninput={handleNameInput}
+          placeholder="e.g. My Project" 
+          class="text-xs"
+        />
+      </Field.Field>
+
+      <Field.Field>
+        <Field.FieldLabel for="ws-folder" class="text-xs font-medium">Folder Location</Field.FieldLabel>
+        <Input 
+          id="ws-folder" 
+          type="text"
+          bind:value={newWsFolder}
+          oninput={() => userCustomizedFolder = true}
+          placeholder=".hirn/workspaces/my-project" 
+          class="font-mono text-xs"
+        />
+        <Field.FieldDescription class="text-[11px] text-muted-foreground">
+          Default location: <code class="font-mono text-foreground font-medium">.hirn/workspaces/{newWsName ? newWsName.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-') : '<name>'}</code>
+        </Field.FieldDescription>
+      </Field.Field>
+    </Field.FieldGroup>
+
+    <Dialog.Footer class="gap-2 pt-2">
+      <Button variant="outline" size="sm" onclick={() => isCreateWorkspaceDialogOpen = false}>Cancel</Button>
+      <Button size="sm" disabled={!newWsName.trim()} onclick={handleCreateWorkspace}>Create Workspace</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

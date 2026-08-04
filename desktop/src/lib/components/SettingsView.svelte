@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import * as Card from '$lib/components/ui/card';
+  import * as Field from '$lib/components/ui/field';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { Separator } from '$lib/components/ui/separator';
@@ -51,7 +52,7 @@
 
   <Separator />
 
-  <div class="flex flex-col gap-6 max-w-2xl">
+  <Field.FieldGroup class="flex flex-col gap-6 max-w-2xl">
     <!-- Appearance Section -->
     <Card.Root>
       <Card.Header>
@@ -96,8 +97,10 @@
         <Card.Title class="text-base font-semibold">Signaling Relay Endpoint</Card.Title>
         <Card.Description class="text-xs text-muted-foreground">Configure the WebRTC signaling and encrypted store-and-forward relay URL (open-source and self-hostable).</Card.Description>
       </Card.Header>
-      <Card.Content class="flex items-center gap-3">
-        <Input type="text" bind:value={relayUrl} placeholder="https://agent.hirn-labs.com" class="font-mono text-xs flex-1" />
+      <Card.Content>
+        <Field.Field>
+          <Input type="text" bind:value={relayUrl} placeholder="https://agent.hirn-labs.com" class="font-mono text-xs flex-1" />
+        </Field.Field>
       </Card.Content>
     </Card.Root>
 
@@ -107,10 +110,12 @@
         <Card.Title class="text-base font-semibold">Commercial Licensing & Hirn Sync</Card.Title>
         <Card.Description class="text-xs text-muted-foreground">Enter your Commercial License Key or Hirn Sync Subscription key.</Card.Description>
       </Card.Header>
-      <Card.Content class="flex items-center gap-3">
-        <Input type="password" bind:value={licenseKey} placeholder="LICENSE-XXXX-XXXX-XXXX" class="font-mono text-xs flex-1" />
-        <Button size="sm">Activate</Button>
+      <Card.Content>
+        <Field.Field class="flex items-center gap-3">
+          <Input type="password" bind:value={licenseKey} placeholder="LICENSE-XXXX-XXXX-XXXX" class="font-mono text-xs flex-1" />
+          <Button size="sm">Activate</Button>
+        </Field.Field>
       </Card.Content>
     </Card.Root>
-  </div>
+  </Field.FieldGroup>
 </div>

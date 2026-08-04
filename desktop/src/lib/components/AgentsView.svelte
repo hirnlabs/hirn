@@ -19,7 +19,7 @@
   <div class="flex flex-col gap-4">
     {#each store.agents as agent}
       <Card.Root>
-        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card.Header class="flex flex-row items-center justify-between gap-2 pb-2">
           <div class="flex items-center gap-2">
             <Card.Title class="text-base font-semibold">{agent.name}</Card.Title>
             {#if agent.isDefault}
