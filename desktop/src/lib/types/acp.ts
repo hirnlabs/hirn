@@ -6,6 +6,7 @@ export interface AcpModel {
   name: string;
   provider: string; // Header grouping e.g. "Anthropic (ACP)", "Local (GGUF)", "LMStudio", "Google (API)"
   description?: string;
+  contextWindow?: number;
 }
 
 export interface ToolCall {
@@ -24,6 +25,10 @@ export interface ChatMessage {
   thoughts?: string;
   toolCalls?: ToolCall[];
   timestamp: number;
+  tokensPerSec?: number;
+  latencyMs?: number;
+  contextTokens?: number;
+  maxContextTokens?: number;
 }
 
 export interface AgentConfig {
@@ -46,4 +51,5 @@ export interface SessionData {
   messages: ChatMessage[];
   createdAt: number;
   updatedAt: number;
+  archived?: boolean;
 }

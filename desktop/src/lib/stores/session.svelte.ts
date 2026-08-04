@@ -8,6 +8,7 @@ export class SessionStore {
   sessions = $state<SessionData[]>([]);
   activeSessionId = $state<string | null>(null);
   agents = $state<AgentConfig[]>([]);
+  autoStartRecording = $state(false);
   private clientSessions = new Map<string, AcpClientSession>();
 
   constructor() {
@@ -63,6 +64,26 @@ export class SessionStore {
   selectSession(id: string) {
     this.activeSessionId = id;
   }
+
+  archiveSession(id: string) {
+    const session = this.sessions.find(s => s.id === id);
+    if (session) {
+      session.archived = true;
+      if (this.activeSessionId === id) {
+        const remaining = this.sessions.filter(s => !s.archived);
+        this.activeSessionId = remaining[0]?.id ?? null;
+      }
+    }
+  }
+
+  unarchiveSession(id: string) {
+    const session = this.sessions.find(s => s.id === id);
+    if (session) {
+      session.archived = false;
+      this.activeSessionId = id;
+    }
+  }
+
 
   createSession(agentId: string, title?: string) {
     const agent = this.agents.find(a => a.id === agentId) ?? this.agents[0];
