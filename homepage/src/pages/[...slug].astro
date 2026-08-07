@@ -1,0 +1,59 @@
+---
+import { getCollection, render } from "astro:content";
+import SubpageLayout from "../components/SubpageLayout.astro";
+
+export async function getStaticPaths() {
+  const allEntries = await getCollection("services");
+  const DEFAULT_LANG = "en";
+  const SUPPORTED_LANGS = ["en", "de"];
+
+  const serviceKeys = Array.from(
+    new Set(allEntries.map((e) => e.id.split("/").pop()))
+  );
+
+  const paths = [];
+
+  for (const key of serviceKeys) {
+    if (!key) continue;
+
+    const defaultEntry =
+      allEntries.find((e) => e.id === `${DEFAULT_LANG}/${key}`) ||
+      allEntries.find((e) => e.id.endsWith(`/${key}`));
+
+    if (defaultEntry) {
+      paths.push({
+        params: { slug: key },
+        props: { entry: defaultEntry, lang: DEFAULT_LANG },
+      });
+    }
+
+    for (const lang of SUPPORTED_LANGS) {
+      const langEntry = allEntries.find((e) => e.id === `${lang}/${key}`);
+      const entryToUse = langEntry || defaultEntry;
+
+      if (entryToUse) {
+        paths.push({
+          params: { slug: `${lang}/${key}` },
+          props: { entry: entryToUse, lang },
+        });
+      }
+    }
+  }
+
+  return paths;
+}
+
+const { entry, lang } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<SubpageLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  lead={entry.data.lead}
+  icon={entry.data.icon}
+  highlights={entry.data.highlights}
+  lang={lang}
+>
+  <Content />
+</SubpageLayout>
