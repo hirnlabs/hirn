@@ -1,6 +1,6 @@
 # Hirn
 
-**An assistant you actually own.**
+**The Assistant you actually own.**
 
 Modular, private, and distributed. Your data stays on your hardware. No cloud bills, no telemetry, no exceptions.
 

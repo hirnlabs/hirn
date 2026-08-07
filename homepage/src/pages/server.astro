@@ -2,7 +2,7 @@
 import Layout from "../components/Layout.astro";
 ---
 
-<Layout title="server - hirn" description="Local RPC inference flexibility for your models.">
+<Layout title="server - hirn" description="Efficient high-scale distributed model serving across devices.">
   <div class="wrap py-12">
     <a href="/" class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
       <svg class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
@@ -19,7 +19,7 @@ import Layout from "../components/Layout.astro";
         <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">server</h1>
       </div>
       <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
-        Local inference flexibility. The RPC distributed model server handles requests seamlessly when the router tier is set to <code class="font-mono text-sm px-1 bg-surface border border-border rounded">local</code>.
+        High-scale model serving infrastructure. The distributed RPC server executes inference efficiently across local hardware and networked devices.
       </p>
     </section>
 
@@ -27,9 +27,12 @@ import Layout from "../components/Layout.astro";
       <div class="md:col-span-2 space-y-10 order-2 md:order-1">
 
         <div class="space-y-4">
-          <h2 class="text-2xl font-bold">Backend Agnostic</h2>
+          <h2 class="text-2xl font-bold">Serving infrastructure, not routing logic</h2>
           <p class="text-secondary leading-relaxed">
-            The hirn server doesn't force you into a single execution engine. It provides a unified RPC interface that seamlessly connects to multiple powerful backends:
+            <strong>hirn_server</strong> focuses on fast and reliable model execution at scale. It does not predict intent; it serves the requests selected by router policy.
+          </p>
+          <p class="text-secondary leading-relaxed">
+            The server exposes a unified RPC interface and can target multiple backends:
           </p>
           <ul class="list-disc list-outside ml-5 text-secondary space-y-2 mt-4">
             <li><strong>llama.cpp:</strong> For highly optimized CPU/GPU offloading on consumer hardware.</li>
@@ -39,9 +42,19 @@ import Layout from "../components/Layout.astro";
         </div>
 
         <div class="space-y-4">
-          <h2 class="text-2xl font-bold">Distributed VRAM Management</h2>
+          <h2 class="text-2xl font-bold">Distributed across devices</h2>
           <p class="text-secondary leading-relaxed">
-            Running large models often requires more VRAM than a single machine holds. The server intelligently pools and manages VRAM across multiple GPUs or even multiple devices on your local network, treating your home lab as a single unified inference cluster.
+            Running large models often requires more VRAM than a single machine can provide. The server pools capacity across multiple GPUs and multiple devices, turning your local network into one serving fabric.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Operationally simple</h2>
+          <p class="text-secondary leading-relaxed">
+            The goal is high-scale serving without heavy ops burden: consistent RPC contracts, backend-agnostic execution, and predictable resource behavior under load.
+          </p>
+          <p class="text-secondary leading-relaxed">
+            In short: router decides <em>what</em> should run, server decides <em>how</em> to serve it efficiently across available hardware.
           </p>
         </div>
 
@@ -49,21 +62,21 @@ import Layout from "../components/Layout.astro";
 
       <div class="space-y-4 order-1 md:order-2">
         <div class="p-6 border border-border rounded-xl">
-          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Zero Setup</h3>
+          <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">High Throughput</h3>
           <p class="text-sm text-secondary leading-relaxed">
-            Starts alongside your agent automatically. No complicated Docker configurations or Python environments required for standard operation.
+            Optimized for sustained multi-request serving with efficient caching, batching and backend-specific execution paths.
           </p>
         </div>
         <div class="p-6 border border-border rounded-xl">
           <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Cross-Platform</h3>
           <p class="text-sm text-secondary leading-relaxed">
-            Natively optimized for Windows, Linux, and macOS, providing bare-metal performance regardless of your OS setup.
+            Natively optimized for Windows, Linux, and macOS while still scaling across heterogeneous hardware.
           </p>
         </div>
         <div class="p-6 border border-border rounded-xl">
           <h3 class="font-mono text-xs font-bold uppercase tracking-wider mb-2">Auto-Scaling</h3>
           <p class="text-sm text-secondary leading-relaxed">
-            Dynamically unloads idle models from VRAM to free up system memory, only loading them when a router request comes through.
+            Dynamically assigns and reclaims VRAM/resources so large models remain practical in real local deployments.
           </p>
         </div>
       </div>
