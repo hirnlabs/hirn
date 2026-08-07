@@ -1,4 +1,4 @@
-# Hirn 🧠 - The assistant you actually own
+# Hirn - The assistant you actually own
 
 <p align="center">
   <picture>
@@ -21,7 +21,7 @@
   <a href="./homepage"><img src="https://img.shields.io/badge/Astro-Home-BC52EE?style=flat-square&logo=astro&logoColor=white" alt="Astro Homepage"></a>
 </p>
 
-Hirn is a composable, private, local-first AI assistant system that runs on your devices and meets you in the interfaces you prefer. Built around a local storage hierarchy and the Agent Client Protocol (ACP), Hirn connects desktop apps, terminal interfaces, mobile clients, and local inference servers through an intelligent router and encrypted WebRTC signaling network with zero cloud lock-in and zero telemetry.
+Hirn (German for brain) is a composable, private, local-first AI assistant system that runs on your devices and meets you in the interfaces you prefer. Built around a local storage hierarchy and the Agent Client Protocol (ACP), Hirn connects desktop apps, terminal interfaces, mobile clients, and local inference servers through an intelligent router and encrypted WebRTC signaling network with zero cloud lock-in and zero 3rd party services by design.
 
 [Website](https://agent.hirn-labs.com) · [Docs](https://hirn-labs.com/docs) · [Web App](https://app.hirn-labs.com/) · [Desktop App](#desktop-application-gui) · [Agent CLI](#agent-cli-headless--standalone) · [Architecture](#how-it-fits-together) · [License](LICENSE)
 
@@ -120,7 +120,7 @@ hirn serve
 
 ```mermaid
 flowchart TD
-    subgraph Apps ["Apps"]
+    subgraph Apps ["Applications"]
         Desktop["Desktop GUI (Tauri)"]
         Mobile["Mobile App (Flutter)"]
         SyncEngine["Common Protocol & Sync Engine (Rust)"]
@@ -129,7 +129,7 @@ flowchart TD
         Mobile --> SyncEngine
     end
 
-    subgraph MCP ["MCP Tools"]
+    subgraph MCP ["MCP Tooling"]
         Zeug["Zeug (Applets)"] -- "MCP Apps" --> MCPServer["MCPv2 Server"]
         Workflows["Workflows"] -- "MCP Tasks" --> MCPServer
     end
@@ -143,7 +143,7 @@ flowchart TD
 
     
 
-    subgraph Data ["Storage"]
+    subgraph Data ["Data Management"]
         T2["Tier 2: CRDT Sync"]
         T3["Tier 3: Indices / DB"]
         T1["Tier 1: Markdown Files"]
