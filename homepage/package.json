@@ -19,10 +19,12 @@
 		"typescript": "^5.7.3"
 	},
 	"dependencies": {
+		"@lucide/astro": "^1.29.0",
 		"@sentry/astro": "^10.57.0",
 		"@spotlightjs/astro": "^3.2.6",
 		"@tailwindcss/vite": "^4.3.1",
 		"astro": "^6.4.6",
+		"mermaid": "^11.16.1",
 		"tailwindcss": "^4.3.1"
 	}
 }

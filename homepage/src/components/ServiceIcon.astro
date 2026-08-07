@@ -1,0 +1,19 @@
+---
+import { Terminal, Monitor, Smartphone, Server, Route, GraduationCap } from "@lucide/astro";
+import BrainIcon from "./BrainIcon.astro";
+
+interface Props {
+  name: "agent" | "desktop" | "assistant" | "server" | "router" | "learn" | "brain" | string;
+  class?: string;
+}
+
+const { name, class: className = "h-6 w-6" } = Astro.props;
+---
+
+{name === "agent" && <Terminal class={className} size={24} />}
+{name === "desktop" && <Monitor class={className} size={24} />}
+{name === "assistant" && <Smartphone class={className} size={24} />}
+{name === "server" && <Server class={className} size={24} />}
+{name === "router" && <Route class={className} size={24} />}
+{name === "learn" && <GraduationCap class={className} size={24} />}
+{name === "brain" && <BrainIcon variant="solid" size={24} class={className} />}
