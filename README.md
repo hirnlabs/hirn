@@ -21,9 +21,11 @@
   <a href="./homepage"><img src="https://img.shields.io/badge/Astro-Home-BC52EE?style=flat-square&logo=astro&logoColor=white" alt="Astro Homepage"></a>
 </p>
 
-Hirn (German for brain) is a composable, private, local-first AI assistant system that runs on your devices and meets you in the interfaces you prefer. Built around a local storage hierarchy and the Agent Client Protocol (ACP), Hirn connects desktop apps, terminal interfaces, mobile clients, and local inference servers through an intelligent router and encrypted WebRTC signaling network with zero cloud lock-in and zero 3rd party services by design.
 
-[Website](https://agent.hirn-labs.com) · [Docs](https://hirn-labs.com/docs) · [Web App](https://app.hirn-labs.com/) · [Desktop App](#desktop-application-gui) · [Agent CLI](#agent-cli-headless--standalone) · [Architecture](#how-it-fits-together) · [License](LICENSE)
+
+Hirn ([hɪʁn](https://upload.wikimedia.org/wikipedia/commons/9/91/De-Hirn.ogg?utm_source=de.wiktionary.org) German for brain) is a composable, private, local-first AI agent ecosystem that, by default, runs 100% private natively on your own hardware. Built around a local storage hierarchy and local [MCPv2 Servers](https://modelcontextprotocol.io/) as Extensions(called Zeug, [t͡sɔɪ̯k](https://upload.wikimedia.org/wikipedia/commons/0/09/De-Zeug.ogg?utm_source=de.wiktionary.org&utm_campaign=index&utm_content=original) , german for useful thing) the [Agent Client Protocol (ACP)](https://agentclientprotocol.com), Hirn connects apps, terminal interfaces, mobile clients, and local inference servers with [RPC](https://wikipedia.org/wiki/Remote_procedure_call) through an intelligent router and encrypted P2P signaling network with zero cloud lock-in and zero 3rd party services by design.
+
+[Website](https://agent.hirn-labs.com) · [Docs](https://hirn-labs.com/docs) · [Web App](https://client.hirn-labs.com/) · [Desktop App](#desktop-application-gui) · [Agent CLI](#agent-cli-headless--standalone) · [Architecture](#how-it-fits-together) · [License](LICENSE)
 
 ---
 
