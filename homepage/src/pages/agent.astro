@@ -19,12 +19,25 @@ import Layout from "../components/Layout.astro";
         <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">agent</h1>
       </div>
       <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
-        The UI/UX layer you actually interact with. <strong>hirn_agent</strong> is built directly on top of the Pi framework, transforming it into a powerful desktop developer assistant.
+        The CLI agent and orchestration core you actually operate behind the scences. <strong>hirn_agent</strong> is built directly on top of Goose and connects to tools via MCP, transforming it into a powerful local agent that can do stuff for you.
       </p>
     </section>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div class="md:col-span-2 space-y-10 order-2 md:order-1">
+
+        <div class="space-y-4">
+          <h2 class="text-2xl font-bold">Install in one command</h2>
+          <p class="text-secondary leading-relaxed">
+            Install scripts detect your OS and architecture, download the right release artifact, and place everything in <code class="font-mono text-sm px-1 bg-surface border border-border rounded">~/.hirn</code>.
+          </p>
+          <div class="space-y-3">
+            <p class="font-mono text-xs font-bold uppercase tracking-wider text-secondary">Windows (PowerShell)</p>
+            <pre is:raw class="p-4 text-sm font-mono overflow-x-auto bg-surface border border-border rounded-xl"><code>irm https://raw.githubusercontent.com/hirnlabs/hirn/main/agent/setup/install.ps1 | iex</code></pre>
+            <p class="font-mono text-xs font-bold uppercase tracking-wider text-secondary">Linux / macOS</p>
+            <pre is:raw class="p-4 text-sm font-mono overflow-x-auto bg-surface border border-border rounded-xl"><code>curl -fsSL https://raw.githubusercontent.com/hirnlabs/hirn/main/agent/setup/install.sh | bash</code></pre>
+          </div>
+        </div>
 
         <div class="space-y-4">
           <h2 class="text-2xl font-bold">Seamless ModelRegistry Integration</h2>
