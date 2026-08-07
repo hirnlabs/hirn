@@ -6,11 +6,11 @@ The TypeScript SDK (`@hirn/sdk`) for building modular, offline-first MCP Apps th
 
 **SDK**:
 The TypeScript library allowing custom offline MCP App bundles to communicate with the Rust Sync Core and host applications via the postMessage bridge channel.
-_Avoid_: Hirn FFI library, custom applet API
+_Avoid_: Hirn FFI library, custom Zeug API
 
 **MCP App (`ext-apps`)**:
 An interactive web application (HTML/JS/CSS) served from an App Bundle, rendered in a sandboxed iframe, conforming to the Model Context Protocol user-interaction extension.
-_Avoid_: Widget, custom tool, plugin, applet
+_Avoid_: Widget, custom tool, plugin, Zeug
 
 **App Bundle**:
 A self-contained directory under `apps/<app-id>/` containing a `manifest.json`, static web assets in `ui/`, and optional MCP tool definitions in `tools/`.
