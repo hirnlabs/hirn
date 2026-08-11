@@ -47,7 +47,7 @@ Download pre-built desktop installers for your operating system directly from [G
 
 ### Agent CLI (Headless / Standalone)
 
-The Hirn Agent is a Rust-based ACP orchestration engine and CLI tool based on the (gooose agent)[https://github.com/aaif-goose/goose] by the (Agentic AI Foundation (AAIF))[https://aaif.io/] at the Linux Foundation. 
+The Hirn Agent is a Rust-based ACP orchestration engine and CLI tool based on the [goose agent](https://github.com/aaif-goose/goose) by the [Agentic AI Foundation (AAIF)](https://aaif.io/) at the Linux Foundation. 
 
 The setup scripts automatically detect your OS/architecture, provision `~/.hirn/bin`, and configure PATH.
 

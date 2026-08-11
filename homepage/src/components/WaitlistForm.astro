@@ -1,43 +1,11 @@
 ---
-import { ArrowRight } from "@lucide/astro";
+import EarlyAccessForm from "./EarlyAccessForm.svelte";
 
 interface Props {
-	class?: string;
+  class?: string;
+  lang?: string;
 }
-const { class: className } = Astro.props;
+const { class: className, lang = "en" } = Astro.props;
 ---
 
-<form class={`flex flex-col sm:flex-row gap-3 w-full max-w-[480px] ${className || ""}`} data-waitlist-form>
-  <input
-    type="email"
-    required
-    placeholder="Enter your email"
-    class="flex-1 px-4 py-[0.8125rem] rounded-xl border border-border bg-surface text-[0.9375rem] text-primary placeholder:text-weak focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all duration-200"
-  />
-  <button
-    type="submit"
-    class="group cursor-pointer rounded-xl bg-accent hover:bg-accent-hover px-6 py-[0.8125rem] text-[0.9375rem] font-semibold whitespace-nowrap text-white dark:text-bg transition-all flex items-center justify-center gap-2"
-  >
-    Join the waitlist
-    <ArrowRight class="h-4 w-4 transform transition-transform group-hover:translate-x-0.5" size={16} />
-  </button>
-</form>
-
-<script>
-  // Find all forms with data-waitlist-form attribute on the page
-  const forms = document.querySelectorAll('form[data-waitlist-form]');
-  for (const form of forms) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement | null;
-      if (emailInput) {
-        const email = emailInput.value.trim();
-        if (email) {
-          const subject = encodeURIComponent("Waitlist signup - hirn");
-          const body = encodeURIComponent(`Hi,\n\nI'd like to join the hirn waitlist.\n\nMy email: ${email}`);
-          window.location.href = `mailto:focccus@proton.me?subject=${subject}&body=${body}`;
-        }
-      }
-    });
-  }
-</script>
+<EarlyAccessForm lang={lang} className={className} client:load />

@@ -7,7 +7,7 @@ const services = defineCollection({
 		title: z.string(),
 		description: z.string(),
 		lead: z.string(),
-		icon: z.enum(["agent", "desktop", "assistant", "server", "router", "learn"]),
+		icon: z.enum(["agent", "desktop", "assistant", "server", "router", "learn", "values"]),
 		highlights: z
 			.array(
 				z.object({
