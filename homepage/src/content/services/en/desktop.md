@@ -1,7 +1,7 @@
 ---
 title: "desktop"
 description: "Tauri v2 & Svelte 5 multi-agent desktop GUI and tool host for Windows, macOS, and Linux."
-lead: "A high-density, minimal desktop interface inspired by Linear and Anytype. Built with Tauri v2, Svelte 5, and TypeScript for multi-agent ACP chat, sandboxed MCP App hosting, non-blocking execution, and seamless CLI sync."
+lead: "A high-density, minimal desktop interface. Built with Rust using Tauri v2, Svelte 5, and TypeScript for multi-agent ACP chat, sandboxed MCP App hosting, non-blocking execution, and seamless CLI sync."
 icon: "desktop"
 highlights:
   - title: "Multi-Agent ACP Chat"
@@ -16,53 +16,41 @@ highlights:
 
 ![Hirn Desktop Interface](/assets/desktop-dark.png)
 
-## High-Density Multi-Agent Workspace
+## Install
 
-Hirn Desktop provides a clean, minimal interface for orchestrating multiple Agent Client Protocol (ACP) agent sessions simultaneously, whether running locally on your workstation, across your local network, or over encrypted P2P connections.
+Hirn supports macOS, Linux, and Windows. You can run the full-featured Desktop GUI or the standalone Agent CLI (or both).
 
-- **Non-Blocking Background Execution:** Switch between agent sessions seamlessly while background agents continue thinking, streaming responses, or running tools.
-- **Session Lifecycle Indicators:** Clear real-time status badges for `idle`, `working` (pulsing status), `waiting_for_input` (permission approvals), and `error`.
-- **Shared Session Storage:** All sessions are saved directly to disk at `~/.hirn/sessions/<session_id>.json`, sharing a single source of truth across CLI, Desktop, and Web.
+### Desktop Application (GUI)
 
-## Dual-Mode Transport Architecture
+Download pre-built desktop installers for your operating system directly from [GitHub Releases](https://github.com/hirnlabs/hirn/releases/latest):
 
-Powered by an abstract `AcpTransport` interface, the desktop UI seamlessly switches between execution modes without changing UI components:
+- **macOS:** Download `.dmg` disk image.
+- **Windows:** Download `.exe` or `.msi` installer.
+- **Linux:** Download `.AppImage` or `.deb` package.
 
-```mermaid
-graph TD
-    UI["HIRN DESKTOP (Svelte 5)<br/>Sidebar Sessions & Central Chat View"]
-    Session["AcpClientSession<br/>(ACP Initialize Handshake & Message Streaming)"]
-    Tauri["TauriIpcTransport<br/>(Local Process / Rust tokio)"]
-    WS["WebSocketTransport<br/>(Network / hirn serve)"]
-    P2P["P2pWebRtcTransport<br/>(WebRTC P2P Sync)"]
+> **Automatic Updates:** Desktop installations automatically check for updates on startup, download release updates in the background, and prompt to restart.
 
-    UI --> Session
-    Session --> Tauri
-    Session --> WS
-    Session --> P2P
+---
+
+### Agent CLI (Headless / Standalone)
+
+The Hirn Agent is a Rust-based ACP orchestration engine and CLI tool based on the goose agent by the Agentic AI Foundation.
+
+```bash
+# macOS / Linux / WSL2
+curl -fsSL https://raw.githubusercontent.com/hirnlabs/hirn/main/agent/setup/install.sh | bash
 ```
 
-- **Tauri IPC Transport (`TauriIpcTransport`):** Executes local ACP agent binaries directly via Rust `tokio::process` pipes (`stdin`/`stdout`), emitting newline-delimited JSON (NDJSON) over Tauri IPC.
-- **WebSocket Bridge (`WebSocketTransport`):** Connects to `hirn serve` or remote network endpoints on `ws://` / `wss://` for browser-based workflows.
-- **P2P WebRTC Sync (`P2pWebRtcTransport`):** Enables encrypted peer-to-peer agent connections with store-and-forward message queuing across devices.
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/hirnlabs/hirn/main/agent/setup/install.ps1 | iex
+```
 
-## Sandboxed MCP Tool Host (`hirn://`)
+---
 
-Hirn Desktop acts as a modular host for interactive tool UIs (MCP Apps). Using custom native URI schemes (`tauri::UriScheme`), local app bundles are served securely under `hirn://apps/<app-id>/index.html` with zero open HTTP ports, preventing network exposure while allowing rich client-side rendering.
+### Standalone Web Client (Docker)
 
-## Installation & Deployment
-
-### Native Desktop Installers
-
-Pre-built native installers are available from GitHub Releases:
-
-- **Windows:** `.msi` or `.exe` installer.
-- **macOS:** `.dmg` disk image.
-- **Linux:** `.AppImage` or `.deb` package.
-
-### Standalone Web Container (Docker)
-
-Deploy the Svelte 5 Web Client as a lightweight container:
+Deploy the Web Client as a lightweight Nginx/SvelteKit Docker container:
 
 ```bash
 docker run -d \
@@ -70,3 +58,105 @@ docker run -d \
   --name hirn-web \
   ghcr.io/hirnlabs/desktop-web:latest
 ```
+
+---
+
+## Quick start
+
+### 1. Verify Setup & Configure Models
+```bash
+hirn doctor
+hirn configure
+```
+
+### 2. Launch Terminal Sessions
+```bash
+# Interactive Chat Session
+hirn session
+
+# Terminal UI (TUI)
+hirn tui
+```
+
+### 3. Connect Desktop & Web Bridge
+Launch the **Hirn Desktop App** for multi-agent chat, non-blocking background execution, interactive tool UIs (`ext-apps`), and encrypted WebRTC P2P sync.
+
+```bash
+hirn desktop
+```
+
+To start an ACP server over WebSocket and HTTP for Web Client or remote tool connections:
+```bash
+hirn serve
+```
+
+---
+
+## How it fits together
+
+Hirn connects desktop apps, terminal interfaces, mobile clients, and local inference servers through an intelligent router and encrypted P2P signaling network with zero cloud lock-in:
+
+```mermaid
+flowchart TD
+    subgraph Apps ["Applications"]
+        Desktop["Desktop GUI (Tauri)"]
+        Mobile["Mobile App (Flutter)"]
+        SyncEngine["Common Protocol & Sync Engine (Rust)"]
+
+        Desktop --> SyncEngine
+        Mobile --> SyncEngine
+    end
+
+    subgraph MCP ["MCP Tooling"]
+        Zeug["Zeug (Applets)"] -- "MCP Apps" --> MCPServer["MCPv2 Server"]
+        Workflows["Workflows"] -- "MCP Tasks" --> MCPServer
+    end
+
+    SyncEngine <--"RPC"--> Cloud["Hirn Sync / message relay (Rust)"]
+
+    SyncEngine -- "IPC / WS" --> Core["Agent Core & CLI (goose/Rust)"]
+    MCPServer -- "STDIO / RPC" --> Core
+
+    Cloud <--"RPC"--> Core
+
+    subgraph Data ["Data Management"]
+        T2["Tier 2: CRDT Sync"]
+        T3["Tier 3: Indices / DB"]
+        T1["Tier 1: Markdown Files"]
+
+        T2 <--> T3
+        T3 <--> T1
+    end
+
+    subgraph Inference ["Inference"]
+        Router["Intelligent Model Router / Gateway (Rust)"]
+        LLMs["Local Inference (llama.cpp/vLLM/colibri...)"]
+        STT["Transcription / Speech-to-Text (Whisper)"]
+        CloudLLMs["Cloud API Providers (optional)"]
+
+        Router --> LLMs
+        Router -. "optional" .-> CloudLLMs
+    end
+
+    Core <--> T3
+    Core <--> T2
+    Core <--> T1
+    Core --> Router
+    Core --> STT
+```
+
+- **Desktop Host:** Tauri v2 + SvelteKit multi-agent host with dual-mode transports (Tauri IPC, WebSocket, WebRTC P2P) and sandboxed interactive tool UIs (`ext-apps`).
+- **Agent CLI:** Rust-based ACP orchestration engine, terminal UI (`tui`), and WebRTC ACP relay server.
+- **Router & Server:** Intelligent local-first gateway routing prompts based on task complexity and VRAM/hardware capability across local llama.cpp / vLLM backends, local Whisper transcription, and optional cloud model providers.
+- **Signaling & Relay Server:** Minimal Rust WebRTC server providing encrypted P2P synchronization and store-and-forward message queuing for async offline delivery across devices.
+- **Storage Hierarchy (Tier 1-3):** Canonical human-readable files (Markdown/JSON), binary CRDT collaboration overlays, and SQLite, Grafeo graph knowledge, and Vector DB queryable indices.
+- **Assistant & Transcribe:** Mobile companion app (Flutter + Rust Sync Core) and local privacy-first speech-to-text engine using Whisper.
+
+---
+
+## Security & Privacy
+
+- **100% Local-First:** Sessions and configurations are persisted locally in `~/.hirn` and your file system. No unexpected cloud telemetry.
+- **Sandboxed Tool UIs:** Interactive extension UIs run in isolated, sandboxed views with zero open HTTP ports.
+- **Encrypted Relay:** WebRTC P2P sync uses encrypted store-and-forward message queues for secure inter-device communication.
+- **Configurable Endpoints:** Swap signaling and relay endpoints to self-hosted instances seamlessly across Desktop UI, Agent CLI, and Mobile Assistant.
