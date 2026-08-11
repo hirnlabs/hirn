@@ -77,9 +77,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: v0.0.0-draft
-          releaseDraft: true
-          prerelease: false
 
       - name: Upload Desktop Artifacts
         uses: actions/upload-artifact@v4
