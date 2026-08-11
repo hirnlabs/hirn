@@ -16,53 +16,41 @@ highlights:
 
 ![Hirn Desktop Benutzeroberfläche](/assets/desktop-dark.png)
 
-## Zentraler Multi-Agenten-Workspace
+## Installation
 
-Hirn Desktop bietet eine übersichtliche, minimale Benutzeroberfläche zur simultanen Orchestrierung mehrerer Agent Client Protocol (ACP) Agenten-Sitzungen, egal ob lokal auf deinem Computer, im lokalen Netzwerk oder über verschlüsselte P2P-Verbindungen.
+Hirn unterstützt macOS, Linux und Windows. Du kannst die vollständige Desktop-GUI oder das eigenständige Agenten-CLI ausführen (oder beides).
 
-- **Unterbrechungsfreie Hintergrund-Ausführung:** Wechsle nahtlos zwischen Agenten-Sitzungen, während Hintergrund-Agenten weiterdenken, Antworten streamen oder Tools ausführen.
-- **Sitzungsstatus-Indikatoren:** Echtzeit-Statusanzeigen für `idle`, `working` (pulsierender Status), `waiting_for_input` (Rechte-Freigaben) und `error`.
-- **Kanonischer Sitzungsspeicher:** Alle Sitzungen werden direkt unter `~/.hirn/sessions/<session_id>.json` gespeichert und teilen eine einheitliche Datenquelle für CLI, Desktop und Web.
+### Desktop-Anwendung (GUI)
 
-## Transportschicht-Architektur (Dual-Mode)
+Lade vorkompilierte Desktop-Installer für dein Betriebssystem direkt von [GitHub Releases](https://github.com/hirnlabs/hirn/releases/latest) herunter:
 
-Angetrieben von einer abstrakten `AcpTransport`-Schnittstelle wechselt die Benutzeroberfläche nahtlos zwischen verschiedenen Ausführungsmodi:
-
-```mermaid
-graph TD
-    UI["HIRN DESKTOP (Svelte 5)<br/>Sidebar Sessions & Central Chat View"]
-    Session["AcpClientSession<br/>(ACP Initialize Handshake & Message Streaming)"]
-    Tauri["TauriIpcTransport<br/>(Local Process / Rust tokio)"]
-    WS["WebSocketTransport<br/>(Network / hirn serve)"]
-    P2P["P2pWebRtcTransport<br/>(WebRTC P2P Sync)"]
-
-    UI --> Session
-    Session --> Tauri
-    Session --> WS
-    Session --> P2P
-```
-
-- **Tauri IPC Transport (`TauriIpcTransport`):** Führt lokale ACP-Agenten-Prozesse direkt über Rust `tokio::process`-Pipes (`stdin`/`stdout`) aus und überträgt Newline-Delimited JSON (NDJSON) über Tauri-IPC.
-- **WebSocket Bridge (`WebSocketTransport`):** Verbindet sich mit `hirn serve` oder Netzwerk-Endpunkten über `ws://` / `wss://` für browserbasierte Workflows.
-- **P2P WebRTC Sync (`P2pWebRtcTransport`):** Ermöglicht verschlüsselte Peer-to-Peer Agenten-Verbindungen mit Store-and-Forward Nachrichtenwarteschlangen über verschiedene Geräte hinweg.
-
-## Isolierter MCP Tool Host (`hirn://`)
-
-Hirn Desktop agiert als modularer Host für interaktive Werkzeug-Oberflächen (MCP Apps). Über eigene native URI-Schemata (`tauri::UriScheme`) werden lokale App-Pakete sicher unter `hirn://apps/<app-id>/index.html` ohne offene HTTP-Ports bereitgestellt.
-
-## Installation & Deployment
-
-### Native Desktop-Installer
-
-Vorkompilierte Installer stehen auf GitHub Releases zur Verfügung:
-
-- **Windows:** `.msi` oder `.exe` Installer.
 - **macOS:** `.dmg` Disk-Image.
+- **Windows:** `.exe` oder `.msi` Installer.
 - **Linux:** `.AppImage` oder `.deb` Paket.
 
-### Standalone Web Container (Docker)
+> **Automatische Updates:** Desktop-Installationen prüfen beim Start automatisch auf Updates, laden Releases im Hintergrund herunter und bieten einen Ein-Klick-Neustart an.
 
-Starte den Svelte 5 Web Client als leichtgewichtigen Container:
+---
+
+### Agenten-CLI (Headless / Standalone)
+
+Der Hirn Agent ist eine Rust-basierte ACP-Orchestrierungsengine und ein CLI-Tool.
+
+```bash
+# macOS / Linux / WSL2
+curl -fsSL https://raw.githubusercontent.com/hirnlabs/hirn/main/agent/setup/install.sh | bash
+```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/hirnlabs/hirn/main/agent/setup/install.ps1 | iex
+```
+
+---
+
+### Standalone Web-Client (Docker)
+
+Starte den Web-Client als leichtgewichtigen Nginx/SvelteKit Docker-Container:
 
 ```bash
 docker run -d \
@@ -70,3 +58,105 @@ docker run -d \
   --name hirn-web \
   ghcr.io/hirnlabs/desktop-web:latest
 ```
+
+---
+
+## Schnellstart
+
+### 1. Setup prüfen & Modelle konfigurieren
+```bash
+hirn doctor
+hirn configure
+```
+
+### 2. Terminal-Sitzungen starten
+```bash
+# Interaktive Chat-Sitzung
+hirn session
+
+# Terminal-Benutzeroberfläche (TUI)
+hirn tui
+```
+
+### 3. Desktop & Web Bridge verbinden
+Starte die **Hirn Desktop App** für Multi-Agenten-Chat, Ausführung im Hintergrund, interaktive Tool-UIs (`ext-apps`) und verschlüsselte WebRTC P2P-Synchronisation.
+
+```bash
+hirn desktop
+```
+
+Um einen ACP-Server über WebSocket und HTTP zu starten:
+```bash
+hirn serve
+```
+
+---
+
+## Wie alles zusammenhängt
+
+Hirn verbindet Desktop-Apps, Terminal-Schnittstellen, mobile Clients und lokale Inferenzserver über einen intelligenten Router und ein verschlüsseltes P2P-Signalisierungsnetzwerk ohne Cloud-Lock-in:
+
+```mermaid
+flowchart TD
+    subgraph Apps ["Applications"]
+        Desktop["Desktop GUI (Tauri)"]
+        Mobile["Mobile App (Flutter)"]
+        SyncEngine["Common Protocol & Sync Engine (Rust)"]
+
+        Desktop --> SyncEngine
+        Mobile --> SyncEngine
+    end
+
+    subgraph MCP ["MCP Tooling"]
+        Zeug["Zeug (Applets)"] -- "MCP Apps" --> MCPServer["MCPv2 Server"]
+        Workflows["Workflows"] -- "MCP Tasks" --> MCPServer
+    end
+
+    SyncEngine <--"RPC"--> Cloud["Hirn Sync / message relay (Rust)"]
+
+    SyncEngine -- "IPC / WS" --> Core["Agent Core & CLI (goose/Rust)"]
+    MCPServer -- "STDIO / RPC" --> Core
+
+    Cloud <--"RPC"--> Core
+
+    subgraph Data ["Data Management"]
+        T2["Tier 2: CRDT Sync"]
+        T3["Tier 3: Indices / DB"]
+        T1["Tier 1: Markdown Files"]
+
+        T2 <--> T3
+        T3 <--> T1
+    end
+
+    subgraph Inference ["Inference"]
+        Router["Intelligent Model Router / Gateway (Rust)"]
+        LLMs["Local Inference (llama.cpp/vLLM/colibri...)"]
+        STT["Transcription / Speech-to-Text (Whisper)"]
+        CloudLLMs["Cloud API Providers (optional)"]
+
+        Router --> LLMs
+        Router -. "optional" .-> CloudLLMs
+    end
+
+    Core <--> T3
+    Core <--> T2
+    Core <--> T1
+    Core --> Router
+    Core --> STT
+```
+
+- **Desktop Host:** Tauri v2 + SvelteKit Multi-Agenten-Host mit Dual-Mode-Transports (Tauri IPC, WebSocket, WebRTC P2P) und isolierten interaktiven Werkzeug-Oberflächen (`ext-apps`).
+- **Agent CLI:** Rust-basierte ACP-Orchestrierungsengine, Terminal-UI (`tui`) und WebRTC-ACP-Relay-Server.
+- **Router & Server:** Intelligentes Local-First-Gateway zur Prompt-Weiterleitung basierend auf Aufgabenkomplexität und Hardwarekapazität über lokale llama.cpp / vLLM Backends, lokale Whisper-Transkription und optionale Cloud-Modellanbieter.
+- **Signalisierungs- & Relay-Server:** Minimalistischer Rust WebRTC Server für verschlüsselte P2P-Synchronisation und Store-and-Forward Nachrichten-Queues für asynchrone Offline-Zustellung.
+- **Speicherhierarchie (Tier 1-3):** Kanonische, menschenlesbare Dateien (Markdown/JSON), binäre CRDT-Kollaborations-Overlays sowie SQLite, Grafeo Graph-Wissen und Vector DB Abfrage-Indizes.
+- **Assistant & Transcribe:** Mobile Companion-App (Flutter + Rust Sync Core) und lokale Speech-to-Text Engine mit Whisper.
+
+---
+
+## Sicherheit & Datenschutz
+
+- **100% Local-First:** Sitzungen und Konfigurationen werden lokal unter `~/.hirn` und in deinem Dateisystem gespeichert. Keine unerwartete Cloud-Telemetrie.
+- **Isolierte Werkzeug-Oberflächen:** Interaktive Erweiterungs-UIs laufen in isolierten Views mit 0 offenen HTTP-Ports.
+- **Verschlüsseltes Relay:** WebRTC P2P-Sync nutzt verschlüsselte Store-and-Forward Nachrichten-Queues für sichere Kommunikation.
+- **Konfigurierbare Endpunkte:** Wechsle Signalisierungs- und Relay-Endpunkte nahtlos zu selbstgehosteten Instanzen.

@@ -158,6 +158,7 @@ flowchart TD
     subgraph Inference ["Inference"]
         Router["Intelligent Model Router / Gateway (Rust)"]
         LLMs["Local Inference (llama.cpp/vLLM/colibri...)"]
+        STT["Transcription / Speech-to-Text (Whisper)"]
         CloudLLMs["Cloud API Providers (optional)"]
 
         Router --> LLMs
@@ -168,11 +169,12 @@ flowchart TD
     Core <--> T2
     Core <--> T1
     Core --> Router
+    Core --> STT
 ```
 
 - **[Desktop Host](./desktop)**: Tauri v2 + SvelteKit multi-agent host with dual-mode transports (Tauri IPC, WebSocket, WebRTC P2P) and sandboxed interactive tool UIs (`ext-apps`).
 - **[Agent CLI](./agent)**: Rust-based ACP orchestration engine, terminal UI (`tui`), and WebRTC ACP relay server.
-- **[Router & Server](./router)**: Intelligent local-first gateway routing prompts based on task complexity and VRAM/hardware capability across local llama.cpp / vLLM backends and optional cloud model providers.
+- **[Router & Server](./router)**: Intelligent local-first gateway routing prompts based on task complexity and VRAM/hardware capability across local llama.cpp / vLLM backends, local Whisper transcription, and optional cloud model providers.
 - **[Signaling & Relay Server](./signaling)**: Minimal Rust WebRTC server providing encrypted P2P synchronization and store-and-forward message queuing for async offline delivery across devices.
 - **[Storage Hierarchy (Tier 1-3)](./data)**: Canonical human-readable files (Markdown/JSON), binary CRDT collaboration overlays, and SQLite, Grafeo graph knowledge, and Vector DB queryable indices.
 - **[Assistant & Transcribe](./assistant)**: Mobile companion app (Flutter + Rust Sync Core) and local privacy-first speech-to-text engine using Whisper.

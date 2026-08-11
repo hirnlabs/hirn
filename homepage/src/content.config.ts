@@ -31,6 +31,31 @@ const home = defineCollection({
 			watchDemoBadge: z.string(),
 			architectureAlt: z.string(),
 		}),
+		why: z.object({
+			eyebrow: z.string(),
+			title: z.string(),
+			description: z.string(),
+			reasons: z.array(
+				z.object({
+					eyebrow: z.string(),
+					title: z.string(),
+					description: z.string(),
+				}),
+			),
+		}),
+		how: z.object({
+			eyebrow: z.string(),
+			title: z.string(),
+			description: z.string(),
+			features: z.array(
+				z.object({
+					icon: z.enum(["graph", "memory", "sdk", "markdown"]),
+					eyebrow: z.string(),
+					title: z.string(),
+					description: z.string(),
+				}),
+			),
+		}),
 		pillars: z.object({
 			eyebrow: z.string(),
 			title: z.string(),
@@ -61,6 +86,19 @@ const home = defineCollection({
 			eyebrow: z.string(),
 			title: z.string(),
 			description: z.string(),
+		}),
+		license: z.object({
+			eyebrow: z.string(),
+			title: z.string(),
+			description: z.string(),
+			points: z.array(
+				z.object({
+					title: z.string(),
+					description: z.string(),
+					badge: z.string(),
+				}),
+			),
+			note: z.string(),
 		}),
 	}),
 });

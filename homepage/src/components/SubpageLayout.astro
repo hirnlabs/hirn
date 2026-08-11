@@ -74,30 +74,140 @@ const backText = lang === "de" ? "Zurück zur Systemübersicht" : "Back to syste
   });
 
   async function renderMermaidCharts() {
-    const mermaidCodes = document.querySelectorAll(
-      ".subpage-markdown pre code.language-mermaid, .subpage-markdown pre.language-mermaid code"
-    );
+    const preElements = document.querySelectorAll(".subpage-markdown pre");
 
-    for (let i = 0; i < mermaidCodes.length; i++) {
-      const codeEl = mermaidCodes[i];
-      const preEl = codeEl.closest("pre");
-      if (!preEl || preEl.dataset.mermaidRendered) continue;
+    for (let i = 0; i < preElements.length; i++) {
+      const preEl = preElements[i] as HTMLPreElement;
+      if (preEl.dataset.mermaidRendered) continue;
+
+      const codeEl = preEl.querySelector("code");
+      const text = (codeEl ? codeEl.textContent : preEl.textContent)?.trim() || "";
+
+      const isMermaid =
+        preEl.classList.contains("language-mermaid") ||
+        codeEl?.classList.contains("language-mermaid") ||
+        preEl.getAttribute("data-language") === "mermaid" ||
+        text.startsWith("flowchart") ||
+        text.startsWith("graph") ||
+        text.startsWith("sequenceDiagram") ||
+        text.startsWith("gantt") ||
+        text.startsWith("classDiagram");
+
+      if (!isMermaid) continue;
       preEl.dataset.mermaidRendered = "true";
 
-      const chartDefinition = (codeEl.textContent || "").trim();
-      const container = document.createElement("div");
-      container.className = "mermaid-container my-6 p-6 rounded-2xl border border-border bg-surface/60 shadow-lg overflow-x-auto flex justify-center";
-      
       const chartId = `mermaid-chart-${Date.now()}-${i}`;
-      
+
       try {
-        const { svg } = await mermaid.render(chartId, chartDefinition);
-        container.innerHTML = svg;
-        preEl.replaceWith(container);
+        const { svg } = await mermaid.render(chartId, text);
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "mermaid-zoom-wrapper relative my-8 rounded-2xl border border-border bg-surface/80 shadow-xl overflow-hidden select-none group";
+
+        wrapper.innerHTML = `
+          <div class="mermaid-viewport w-full overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing p-6 min-h-[400px]">
+            <div class="mermaid-stage transition-transform duration-75 ease-out flex items-center justify-center w-full">
+              ${svg}
+            </div>
+          </div>
+
+          <div class="absolute bottom-3 right-3 z-20 flex items-center gap-1 bg-surface/90 backdrop-blur-md p-1.5 rounded-xl border border-border shadow-lg opacity-80 group-hover:opacity-100 transition-opacity">
+            <button type="button" class="mermaid-zoom-in p-1.5 rounded-lg hover:bg-border/60 text-secondary hover:text-primary transition-colors cursor-pointer" title="Zoom In">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7v14"/></svg>
+            </button>
+            <button type="button" class="mermaid-zoom-out p-1.5 rounded-lg hover:bg-border/60 text-secondary hover:text-primary transition-colors cursor-pointer" title="Zoom Out">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+            </button>
+            <div class="h-4 w-px bg-border/60 mx-0.5"></div>
+            <button type="button" class="mermaid-reset-btn p-1.5 rounded-lg hover:bg-border/60 text-secondary hover:text-primary transition-colors cursor-pointer" title="Reset Zoom">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+          </div>
+        `;
+
+        setupZoomableMermaid(wrapper);
+        preEl.replaceWith(wrapper);
       } catch (err) {
         console.error("Mermaid render error:", err);
       }
     }
+  }
+
+  function setupZoomableMermaid(wrapper: HTMLElement) {
+    const viewport = wrapper.querySelector(".mermaid-viewport") as HTMLElement;
+    const stage = wrapper.querySelector(".mermaid-stage") as HTMLElement;
+
+    let scale = 1.15;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    function updateTransform() {
+      stage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    }
+
+    updateTransform();
+
+    // Drag Panning
+    viewport.addEventListener("pointerdown", (e) => {
+      if ((e.target as HTMLElement).closest("button")) return;
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      viewport.style.cursor = "grabbing";
+      viewport.setPointerCapture(e.pointerId);
+    });
+
+    viewport.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
+    });
+
+    const stopDragging = (e: PointerEvent) => {
+      if (!isDragging) return;
+      isDragging = false;
+      viewport.style.cursor = "grab";
+      try {
+        viewport.releasePointerCapture(e.pointerId);
+      } catch {}
+    };
+
+    viewport.addEventListener("pointerup", stopDragging);
+    viewport.addEventListener("pointercancel", stopDragging);
+
+    // Scroll Wheel Zoom
+    viewport.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 0.87;
+        scale = Math.min(Math.max(scale * factor, 0.4), 3.5);
+        updateTransform();
+      },
+      { passive: false }
+    );
+
+    // Buttons
+    wrapper.querySelector(".mermaid-zoom-in")?.addEventListener("click", () => {
+      scale = Math.min(scale * 1.2, 3.5);
+      updateTransform();
+    });
+
+    wrapper.querySelector(".mermaid-zoom-out")?.addEventListener("click", () => {
+      scale = Math.max(scale / 1.2, 0.4);
+      updateTransform();
+    });
+
+    wrapper.querySelector(".mermaid-reset-btn")?.addEventListener("click", () => {
+      scale = 1.15;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+    });
   }
 
   function initCopyButtons() {
@@ -106,7 +216,8 @@ const backText = lang === "de" ? "Zurück zur Systemübersicht" : "Back to syste
       if (
         pre.querySelector('.copy-code-btn') ||
         pre.querySelector('code.language-mermaid') ||
-        pre.classList.contains('language-mermaid')
+        pre.classList.contains('language-mermaid') ||
+        pre.dataset.mermaidRendered === "true"
       ) {
         return;
       }
@@ -234,7 +345,7 @@ const backText = lang === "de" ? "Zurück zur Systemübersicht" : "Back to syste
     color: var(--primary);
     font-weight: 600;
   }
-  .mermaid-container svg {
+  .mermaid-stage svg {
     max-width: 100%;
     height: auto;
   }
