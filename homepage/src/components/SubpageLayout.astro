@@ -1,0 +1,352 @@
+---
+import Layout from "./Layout.astro";
+import ServiceIcon from "./ServiceIcon.astro";
+import HighlightCard from "./HighlightCard.astro";
+import { ArrowLeft } from "@lucide/astro";
+
+interface Highlight {
+  title: string;
+  description: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  lead?: string;
+  icon?: string;
+  highlights?: Highlight[];
+  lang?: string;
+}
+
+const { title, description, lead, icon, highlights = [], lang = "en" } = Astro.props;
+
+const homeUrl = lang === "de" ? "/de" : "/";
+const backText = lang === "de" ? "Zurück zur Systemübersicht" : "Back to system overview";
+---
+
+<Layout title={`${title} - hirn`} description={description} lang={lang}>
+  <div class="wrap py-12">
+    <a href={homeUrl} class="group inline-flex items-center gap-2 mb-8 font-mono text-xs text-secondary hover:text-primary transition-colors">
+      <ArrowLeft class="h-4 w-4 transform transition-transform group-hover:-translate-x-0.5" size={16} />
+      {backText}
+    </a>
+
+    <section class="mb-12 border-b border-border pb-10">
+      <div class="flex items-center gap-4 mb-4">
+        {icon && (
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-bg">
+            <ServiceIcon name={icon} class="h-6 w-6" />
+          </div>
+        )}
+        <h1 class="text-[clamp(2rem,4vw,2.75rem)] font-bold tracking-tight">{title}</h1>
+      </div>
+      {lead && (
+        <p class="text-xl text-secondary max-w-[680px] leading-relaxed">
+          {lead}
+        </p>
+      )}
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="md:col-span-2 space-y-10 order-2 md:order-1 subpage-markdown">
+        <slot />
+      </div>
+
+      {highlights.length > 0 && (
+        <div class="space-y-4 order-1 md:order-2">
+          {highlights.map((item) => (
+            <HighlightCard title={item.title} description={item.description} />
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import mermaid from "mermaid";
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: "dark",
+    securityLevel: "loose",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  });
+
+  async function renderMermaidCharts() {
+    const preElements = document.querySelectorAll(".subpage-markdown pre");
+
+    for (let i = 0; i < preElements.length; i++) {
+      const preEl = preElements[i] as HTMLPreElement;
+      if (preEl.dataset.mermaidRendered) continue;
+
+      const codeEl = preEl.querySelector("code");
+      const text = (codeEl ? codeEl.textContent : preEl.textContent)?.trim() || "";
+
+      const isMermaid =
+        preEl.classList.contains("language-mermaid") ||
+        codeEl?.classList.contains("language-mermaid") ||
+        preEl.getAttribute("data-language") === "mermaid" ||
+        text.startsWith("flowchart") ||
+        text.startsWith("graph") ||
+        text.startsWith("sequenceDiagram") ||
+        text.startsWith("gantt") ||
+        text.startsWith("classDiagram");
+
+      if (!isMermaid) continue;
+      preEl.dataset.mermaidRendered = "true";
+
+      const chartId = `mermaid-chart-${Date.now()}-${i}`;
+
+      try {
+        const { svg } = await mermaid.render(chartId, text);
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "mermaid-zoom-wrapper relative my-8 rounded-2xl border border-border bg-surface/80 shadow-xl overflow-hidden select-none group";
+
+        wrapper.innerHTML = `
+          <div class="mermaid-viewport w-full overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing p-6 min-h-[400px]">
+            <div class="mermaid-stage transition-transform duration-75 ease-out flex items-center justify-center w-full">
+              ${svg}
+            </div>
+          </div>
+
+          <div class="absolute bottom-3 right-3 z-20 flex items-center gap-1 bg-surface/90 backdrop-blur-md p-1.5 rounded-xl border border-border shadow-lg opacity-80 group-hover:opacity-100 transition-opacity">
+            <button type="button" class="mermaid-zoom-in p-1.5 rounded-lg hover:bg-border/60 text-secondary hover:text-primary transition-colors cursor-pointer" title="Zoom In">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14m-7-7v14"/></svg>
+            </button>
+            <button type="button" class="mermaid-zoom-out p-1.5 rounded-lg hover:bg-border/60 text-secondary hover:text-primary transition-colors cursor-pointer" title="Zoom Out">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+            </button>
+            <div class="h-4 w-px bg-border/60 mx-0.5"></div>
+            <button type="button" class="mermaid-reset-btn p-1.5 rounded-lg hover:bg-border/60 text-secondary hover:text-primary transition-colors cursor-pointer" title="Reset Zoom">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+          </div>
+        `;
+
+        setupZoomableMermaid(wrapper);
+        preEl.replaceWith(wrapper);
+      } catch (err) {
+        console.error("Mermaid render error:", err);
+      }
+    }
+  }
+
+  function setupZoomableMermaid(wrapper: HTMLElement) {
+    const viewport = wrapper.querySelector(".mermaid-viewport") as HTMLElement;
+    const stage = wrapper.querySelector(".mermaid-stage") as HTMLElement;
+
+    let scale = 1.15;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    function updateTransform() {
+      stage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    }
+
+    updateTransform();
+
+    // Drag Panning
+    viewport.addEventListener("pointerdown", (e) => {
+      if ((e.target as HTMLElement).closest("button")) return;
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      viewport.style.cursor = "grabbing";
+      viewport.setPointerCapture(e.pointerId);
+    });
+
+    viewport.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
+    });
+
+    const stopDragging = (e: PointerEvent) => {
+      if (!isDragging) return;
+      isDragging = false;
+      viewport.style.cursor = "grab";
+      try {
+        viewport.releasePointerCapture(e.pointerId);
+      } catch {}
+    };
+
+    viewport.addEventListener("pointerup", stopDragging);
+    viewport.addEventListener("pointercancel", stopDragging);
+
+    // Scroll Wheel Zoom
+    viewport.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 0.87;
+        scale = Math.min(Math.max(scale * factor, 0.4), 3.5);
+        updateTransform();
+      },
+      { passive: false }
+    );
+
+    // Buttons
+    wrapper.querySelector(".mermaid-zoom-in")?.addEventListener("click", () => {
+      scale = Math.min(scale * 1.2, 3.5);
+      updateTransform();
+    });
+
+    wrapper.querySelector(".mermaid-zoom-out")?.addEventListener("click", () => {
+      scale = Math.max(scale / 1.2, 0.4);
+      updateTransform();
+    });
+
+    wrapper.querySelector(".mermaid-reset-btn")?.addEventListener("click", () => {
+      scale = 1.15;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+    });
+  }
+
+  function initCopyButtons() {
+    const preElements = document.querySelectorAll('.subpage-markdown pre');
+    preElements.forEach((pre) => {
+      if (
+        pre.querySelector('.copy-code-btn') ||
+        pre.querySelector('code.language-mermaid') ||
+        pre.classList.contains('language-mermaid') ||
+        pre.dataset.mermaidRendered === "true"
+      ) {
+        return;
+      }
+
+      const btn = document.createElement('button');
+      btn.className = 'copy-code-btn absolute top-2.5 right-2.5 px-2.5 py-1 text-xs font-mono rounded-md bg-surface hover:bg-border/60 border border-border text-secondary hover:text-primary transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-sm';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+
+      btn.innerHTML = `
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        <span>Copy</span>
+      `;
+
+      btn.addEventListener('click', async () => {
+        const code = pre.querySelector('code');
+        const text = (code ? code.textContent : pre.textContent)?.trim() || "";
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.innerHTML = `
+            <svg class="h-3.5 w-3.5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-accent font-semibold">Copied!</span>
+          `;
+          setTimeout(() => {
+            btn.innerHTML = `
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              <span>Copy</span>
+            `;
+          }, 2000);
+        } catch (err) {
+          console.error('Clipboard copy failed:', err);
+        }
+      });
+
+      pre.appendChild(btn);
+    });
+  }
+
+  renderMermaidCharts();
+  initCopyButtons();
+  document.addEventListener('astro:page-load', () => {
+    renderMermaidCharts();
+    initCopyButtons();
+  });
+</script>
+
+<style is:global>
+  /* Markdown content styling inside subpages */
+  .subpage-markdown {
+    color: var(--secondary);
+    line-height: 1.625;
+  }
+  .subpage-markdown h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+  }
+  .subpage-markdown h2:first-child {
+    margin-top: 0;
+  }
+  .subpage-markdown h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.75rem;
+    margin-top: 1.5rem;
+  }
+  .subpage-markdown p {
+    margin-bottom: 1rem;
+    line-height: 1.625;
+  }
+  .subpage-markdown p strong {
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .subpage-markdown code {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    padding: 0.125rem 0.25rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    color: var(--primary);
+  }
+  .subpage-markdown pre {
+    position: relative;
+    padding: 1rem;
+    padding-right: 5rem;
+    font-size: 0.875rem;
+    font-family: var(--font-mono);
+    overflow-x: auto;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+  }
+  .subpage-markdown pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    border-radius: 0;
+  }
+  .subpage-markdown ul {
+    list-style-type: disc;
+    list-style-position: outside;
+    margin-left: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .subpage-markdown ol {
+    list-style-type: decimal;
+    list-style-position: outside;
+    margin-left: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .subpage-markdown li strong {
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .mermaid-stage svg {
+    max-width: 100%;
+    height: auto;
+  }
+</style>

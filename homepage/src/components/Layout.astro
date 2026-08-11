@@ -1,20 +1,59 @@
 ---
 import "../styles/global.css";
 import ThemeToggle from "./ThemeToggle.astro";
+import { Globe } from "@lucide/astro";
+import BrainIcon from "./BrainIcon.astro";
 
 interface Props {
 	title?: string;
 	description?: string;
+	lang?: string;
 }
 
 const {
-	title = "hirn - An assistant you actually own.",
+	title = "hirn - The Assistant you actually own.",
 	description = "hirn is a modular, private, and distributed local system for agents that you own and control.",
+	lang = "en",
 } = Astro.props;
+
+const currentPath = Astro.url.pathname;
+
+function getLangPath(targetLang: string): string {
+  const cleanPath = currentPath.replace(/\/$/, "") || "/";
+  const isDe = cleanPath === "/de" || cleanPath.startsWith("/de/");
+  const pathWithoutLang = isDe ? cleanPath.replace(/^\/de/, "") || "/" : cleanPath;
+
+  if (targetLang === "de") {
+    return pathWithoutLang === "/" ? "/de" : `/de${pathWithoutLang}`;
+  } else {
+    // English is default at root
+    return pathWithoutLang;
+  }
+}
+
+const deUrl = getLangPath("de");
+const enUrl = getLangPath("en");
+const navPrefix = lang === "de" ? "/de" : "";
+
+let githubStars = "Star";
+try {
+  const res = await fetch("https://api.github.com/repos/hirnlabs/hirn", {
+    headers: { "User-Agent": "hirn-homepage" },
+  });
+  if (res.ok) {
+    const repo = await res.json();
+    if (typeof repo.stargazers_count === "number") {
+      const count = repo.stargazers_count;
+      githubStars = count >= 1000 ? `${(count / 1000).toFixed(1)}k` : `${count}`;
+    }
+  }
+} catch {
+  githubStars = "Star";
+}
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,10 +62,7 @@ const {
 		<title>{title}</title>
 		<meta name="description" content={description} />
 
-		<!-- Google Fonts -->
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+		<!-- Fonts: self-hosted Inter + Plus Jakarta Sans (see /fonts/) -->
 
 		<!-- Inline script to prevent theme flashing on load -->
 		<script is:inline>
@@ -45,28 +81,57 @@ const {
 
 	<body class="bg-bg text-primary transition-colors duration-300">
 		<!-- Header / Nav -->
-		<nav class="bg-bg py-5 sticky top-0 z-50 transition-colors duration-300">
+		<nav class="bg-bg/90 backdrop-blur-md py-3 sticky top-0 z-50 transition-colors duration-300 border-b border-border/40">
 			<div class="wrap flex items-center justify-between relative px-4">
 				<!-- Left Brand -->
-				<a href="/" class="flex flex-col hover:opacity-80 transition-opacity">
-					<span class="font-mono text-[1.125rem] font-bold tracking-tight leading-none">hirn</span>
-					<span class="font-mono text-[0.55rem] tracking-[0.14em] uppercase text-secondary mt-1">
-						Early Access
-					</span>
+				<a href={navPrefix || "/"} class="flex items-center gap-2.5 hover:opacity-85 transition-opacity group">
+					<BrainIcon variant="outline" size={24} class="text-primary transform transition-transform group-hover:scale-105" />
+					<div class="flex flex-col">
+						<span class="font-mono text-[1.125rem] font-extrabold tracking-tight leading-none text-primary">hirn</span>
+						<span class="font-mono text-[0.525rem] tracking-[0.14em] uppercase text-accent font-semibold mt-0.5">
+							Early Access
+						</span>
+					</div>
 				</a>
 
 				<!-- Centered Links -->
-				<div class="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-					<a href="/router" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">router</a>
-					<a href="/agent" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">agent</a>
-					<a href="/learn" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">learn</a>
-					<a href="/server" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">server</a>
-					<a href="/ui" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">ui</a>
-					<a href="/transcribe" class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">transcribe</a>
+				<div class="hidden xl:flex items-center gap-5">
+					<a href={`${navPrefix}/agent`} class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">agent</a>
+					<a href={`${navPrefix}/desktop`} class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">desktop</a>
+					<a href={`${navPrefix}/assistant`} class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">assistant</a>
+					<a href={`${navPrefix}/server`} class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">server</a>
+					<a href={`${navPrefix}/router`} class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">router</a>
+					<a href={`${navPrefix}/learn`} class="font-mono text-[0.8125rem] font-bold tracking-wider text-secondary hover:text-accent transition-colors">learn</a>
 				</div>
 
 				<!-- Right Controls -->
-				<div class="flex items-center gap-3">
+				<div class="flex items-center gap-2.5">
+					<div class="flex items-center gap-1">
+						<a
+							href="https://github.com/hirnlabs/hirn"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="h-9 px-3 rounded-l-xl rounded-r-sm bg-surface border border-border hover:border-accent text-primary font-mono text-xs font-semibold transition-all duration-200 flex items-center gap-2 whitespace-nowrap group"
+							aria-label="GitHub Repository hirnlabs/hirn"
+						>
+							<svg class="h-4 w-4 fill-current text-primary group-hover:text-accent transition-colors" viewBox="0 0 24 24">
+								<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+							</svg>
+							<span class="hidden sm:inline font-bold">hirnlabs/hirn</span>
+						</a>
+						<a
+							href="https://github.com/hirnlabs/hirn/stargazers"
+							target="_blank"
+							rel="noopener noreferrer"
+							title="Star hirnlabs/hirn on GitHub"
+							class="h-9 px-2.5 rounded-r-xl rounded-l-sm bg-surface border border-border hover:border-amber-400 hover:bg-amber-400/10 text-primary font-mono text-xs transition-all flex items-center gap-1.5 whitespace-nowrap group"
+						>
+							<svg class="h-3.5 w-3.5 text-amber-500 fill-amber-500 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+								<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+							</svg>
+							<span class="font-bold text-xs">{githubStars}</span>
+						</a>
+					</div>
 					<ThemeToggle />
 				</div>
 			</div>
@@ -80,10 +145,23 @@ const {
 		<!-- Footer -->
 		<footer class="border-t border-border py-8 bg-surface/30 transition-colors duration-300 mt-20">
 			<div class="wrap flex flex-wrap items-center justify-between gap-4">
-				<span class="font-mono text-xs text-weak">&copy; 2026 focccus.dev &mdash; hirn</span>
-				<div class="flex gap-4">
-					<a href="/#waitlist" class="font-mono text-xs text-weak hover:text-secondary transition-colors">Waitlist</a>
-					<a href="https://github.com/focccus-dev" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-weak hover:text-secondary transition-colors">GitHub</a>
+				<span class="font-mono text-xs text-weak">&copy; 2026 hirnlabs.xyz</span>
+
+				<div class="flex items-center gap-6">
+					<!-- Footer Language Switcher -->
+					<div class="flex items-center gap-2 font-mono text-xs text-weak">
+						<Globe class="h-3.5 w-3.5 opacity-70" size={14} />
+						<a href={deUrl} class={lang === "de" ? "text-primary font-bold underline underline-offset-2" : "hover:text-secondary transition-colors"}>DE</a>
+						<span class="opacity-40">/</span>
+						<a href={enUrl} class={lang === "en" ? "text-primary font-bold underline underline-offset-2" : "hover:text-secondary transition-colors"}>EN</a>
+					</div>
+
+					<div class="flex gap-4">
+						<a href={`${navPrefix}/values`} class="font-mono text-xs text-weak hover:text-secondary transition-colors">{lang === "de" ? "Werte" : "Values"}</a>
+						<a href={`${navPrefix}/#waitlist`} class="font-mono text-xs text-weak hover:text-secondary transition-colors">{lang === "de" ? "Zugang" : "Early Access"}</a>
+						<a href="https://github.com/hirnlabs/hirn" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-weak hover:text-secondary transition-colors">GitHub</a>
+						<a href="https://www.instagram.com/hirnlabs" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-weak hover:text-secondary transition-colors">Instagram</a>
+					</div>
 				</div>
 			</div>
 		</footer>

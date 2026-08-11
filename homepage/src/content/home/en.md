@@ -1,0 +1,107 @@
+---
+title: "hirn - The Assistant you actually own"
+description: "hirn is a modular, private, and distributed local system for agents that you own and control. Built on top of the goose CLI agent."
+hero:
+  eyebrow: "The Assistant you actually own."
+  title: "Modular. Private. Open."
+  lead: "A composable agent system that you own and control. Speak or type to automate your daily workflows. By default every app, model execution, and learning loop runs 100% locally."
+  watchDemoBadge: "Watch Demo Video"
+  architectureAlt: "hirn architecture: local model server, model router, and desktop agent"
+why:
+  eyebrow: "Why hirn?"
+  title: "Why yet another agent orchestration system?"
+  description: "Most agent systems rely on cloud services, scattered tools, and proprietary walled gardens. hirn is built from the ground up to give you total ownership. You simply bring your own models, your own agents, and build your own local tools and workflows."
+  reasons:
+    - eyebrow: "Local-First"
+      title: "100% Local & Private"
+      description: "Operates directly on your local files, not in the cloud. Your data and conversations stay strictly on your device."
+    - eyebrow: "Unified Workspace"
+      title: "All in One Place"
+      description: "Notes, tasks, contacts, friends & family, calendar, emails, and more—seamlessly accessible to your local agents."
+    - eyebrow: "Multi-Device"
+      title: "Encrypted P2P Sync"
+      description: "Seamless, end-to-end encrypted P2P synchronization across Linux, Windows, and Android without central servers."
+    - eyebrow: "Extensible"
+      title: "Composable & Extendable"
+      description: "Build your own Zeug (small web apps) to interact with your data using custom, interactive user interfaces."
+    - eyebrow: "Model Layer"
+      title: "Model Serving & Routing"
+      description: "Distributed local model serving for efficient inference and an intelligent intent router that selects the optimal model tier for every prompt."
+    - eyebrow: "Agent Stack"
+      title: "Agents, Tools & Workflows"
+      description: "Full agent orchestration with subagents, MCP tools, ACP (Agent Client Protocol) agents, custom Skills, and multi-step Workflows."
+how:
+  eyebrow: "How It Works"
+  title: "Markdown & Graph Index As The Backbone"
+  description: "hirn turns plain local Markdown notes into a connected knowledge graph—giving agents rich long-term memory and letting developers build custom Zeug on top."
+  features:
+    - icon: "markdown"
+      eyebrow: "Plain Text First"
+      title: "Local Markdown Notes"
+      description: "No proprietary databases or cloud lock-in. Everything is stored in local, human-readable Markdown files that you fully control."
+    - icon: "graph"
+      eyebrow: "Headline Feature"
+      title: "Graph Index & Memory"
+      description: "Builds a bidirectional graph index across your Markdown notes allowing agents to retrieve context instantly."
+    - icon: "sdk"
+      eyebrow: "Developer SDK"
+      title: "Build Zeug on hirn"
+      description: "Use the hirn SDK to build tiny web apps (Zeug) directly on top of your local graph structure with custom user interfaces."
+pillars:
+  eyebrow: "System Layout"
+  title: "The 6 pillars of hirn"
+  description: "Each component acts as an independent service in the system, communicating locally to form a highly optimized personal intelligence node."
+  cards:
+    agent:
+      description: "CLI personal agent orchestrating system actions using the Agent Control Protocol (ACP), powered by goose. Includes one-line install scripts for Windows, Linux, and macOS."
+      linkText: "Explore agent →"
+    desktop:
+      description: "Standalone desktop experience for Windows and Linux, plus a browser mode. Run as a native app with local process execution or connect through the web client."
+      linkText: "Explore desktop →"
+    assistant:
+      description: "Android mobile companion app that can run tools, connect to your desktop, and keep work available on the go while offline. Sync resumes whenever the desktop is reachable."
+      linkText: "Explore assistant →"
+    server:
+      description: "Distributed model serving layer focused on efficient high-scale inference across local GPUs and multiple devices."
+      linkText: "Explore server →"
+    router:
+      description: "Intent prediction model that classifies user requests and selects the right capability and model tier for each turn."
+      linkText: "Explore router →"
+    learn:
+      description: "Training framework for the router intent model. Uses your own agent interaction history to label, finetune, and improve intent prediction over time."
+      linkText: "Explore learn →"
+developer:
+  eyebrow: "For Developers"
+  title: "Ship nothing to the cloud."
+  description: "Develop tiny web apps (Zeug, german for useful things), plug it into hirn's ecosystem, and forget about everything else. No servers, no deployment pipelines, no cloud bills."
+  features:
+    - eyebrow: "Zero infrastructure"
+      title: "No servers to run"
+      description: "Zeug runs on the user's device. No backend to operate, no database to secure, no rate limits to manage."
+    - eyebrow: "Custom interface"
+      title: "Your own UI"
+      description: "Ship a full HTML and JS interface that opens inside hirn using a bidirectional, real-time, fully offline SDK."
+    - eyebrow: "Ecosystem"
+      title: "Plug in, not build out"
+      description: "Focus on what your skill actually does. Deployment, security, and data infrastructure are not a worry."
+  privacyBanner: "Everything stays on your local hardware. No corporate telemetry, no data collection, no exceptions. Not now, not ever. Your data, your models, your decisions."
+waitlist:
+  eyebrow: "Get early access"
+  title: "Get early access to hirn."
+  description: "We are building a truly open, sovereign system. Sign up to get early developer releases and shape how hirn evolves."
+license:
+  eyebrow: "Licensing & Costs"
+  title: "100% Free for Personal & Non-Commercial Use"
+  description: "hirn is built for user sovereignty and private local computation. The entire core software stack is open source and self-hostable."
+  points:
+    - title: "Individual & Non-Commercial"
+      description: "Completely free for personal, individual, and non-commercial use with full access to core capabilities."
+      badge: "Free"
+    - title: "Commercial Usage"
+      description: "Requires a valid License Key (one-time purchase) or an active Hirn Sync Subscription for commercial applications."
+      badge: "Commercial"
+    - title: "Open Source & Self-Hostable"
+      description: "The entire software stack including protocols, SDKs, and encrypted relay servers is 100% open source and self-hostable."
+      badge: "Open Source"
+  note: "You do not need a subscription to access features. The Hirn Sync subscription simply provides a convenient way to keep your devices in sync without running your own relay infrastructure."
+---

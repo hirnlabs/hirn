@@ -1,0 +1,107 @@
+---
+title: "hirn - Der Assistent, der wirklich dir gehört"
+description: "hirn ist ein modulares, privates und verteiltes lokales System für Agenten, das du selbst besitzt und kontrollierst. Aufgebaut auf dem goose CLI-Agenten."
+hero:
+  eyebrow: "Der Assistent, der wirklich dir gehört."
+  title: "Modular. Privat. Offen."
+  lead: "Ein modulares Agentensystem, das du selbst besitzt und kontrollierst. Spreche oder tippe, um deine täglichen Workflows zu automatisieren. Standardmäßig läuft jede App, jede Modellausführung und jede Trainingsschleife zu 100% lokal."
+  watchDemoBadge: "Demo-Video ansehen"
+  architectureAlt: "hirn Architektur: lokaler Modellserver, Modell-Router und Desktop-Agent"
+why:
+  eyebrow: "Warum hirn?"
+  title: "Warum noch ein Agenten-Orchestrierungssystem?"
+  description: "Die meisten Agentensysteme setzen auf Cloud-Dienste, verstreute Tools und geschlossene Ökosysteme. hirn wurde von Grund auf entwickelt, um dir volle Eigentümerschaft zu geben. Du bringst einfach deine eigenen Modelle und Agenten mit und baust deine eigenen lokalen Tools und Workflows."
+  reasons:
+    - eyebrow: "Local-First"
+      title: "100% lokal & privat"
+      description: "Arbeitet direkt auf deinen lokalen Dateien, nicht in der Cloud. Deine Daten und Konversationen bleiben strikt auf deinem Gerät."
+    - eyebrow: "Zentral"
+      title: "Alles an einem Ort"
+      description: "Notizen, Aufgaben, Kontakte, Familie & Freunde, Kalender, E-Mails und mehr – nahtlos für deine lokalen Agenten verfügbar."
+    - eyebrow: "Geräteübergreifend"
+      title: "Verschlüsselte P2P-Synchro"
+      description: "Nahtlose, Ende-zu-Ende verschlüsselte P2P-Synchronisation zwischen Linux, Windows und Android ohne zentrale Server."
+    - eyebrow: "Erweiterbar"
+      title: "Komponierbar & erweiterbar"
+      description: "Baue dein eigenes Zeug (kleine Web-Apps), um deine Daten in maßgeschneiderten, interaktiven Oberflächen zu nutzen."
+    - eyebrow: "Modell-Ebene"
+      title: "Modell-Serving & Routing"
+      description: "Verteiltes lokales Modell-Serving für effiziente Inferenz und ein intelligenter Intent-Router, der für jede Anfrage das optimale Modell-Tier wählt."
+    - eyebrow: "Agenten-Stack"
+      title: "Agenten, Tools & Workflows"
+      description: "Vollständige Agenten-Orchestrierung mit Subagenten, MCP-Tools, ACP (Agent Client Protocol) Agenten, eigenen Skills und mehrstufigen Workflows."
+how:
+  eyebrow: "So funktioniert's"
+  title: "Markdown & Graph-Index als Rückgrat"
+  description: "hirn verwandelt einfache lokale Markdown-Notizen in einen verknüpften Wissens-Graphen – für ein tiefes Langzeitgedächtnis deiner Agenten und einfaches Entwickeln von eigenem Zeug."
+  features:
+    - icon: "markdown"
+      eyebrow: "Plain Text First"
+      title: "Lokale Markdown-Notizen"
+      description: "Keine proprietären Datenbanken oder Cloud-Lock-in. Alles wird in lokalen, menschenlesbaren Markdown-Dateien gespeichert, die du voll kontrollierst."
+    - icon: "graph"
+      eyebrow: "Haupt-Feature"
+      title: "Graph-Index & Gedächtnis"
+      description: "Erstellt einen bidirektionalen Graph-Index über deine Markdown-Notizen, wodurch Agenten den Kontext sofort abrufen können."
+    - icon: "sdk"
+      eyebrow: "Entwickler-SDK"
+      title: "Zeug auf hirn bauen"
+      description: "Nutze das hirn SDK, um kleine Web-Apps (Zeug) direkt auf deiner lokalen Graph-Struktur mit eigenen Benutzeroberflächen zu erstellen."
+pillars:
+  eyebrow: "Systemarchitektur"
+  title: "Die 6 Säulen von hirn"
+  description: "Jede Komponente agiert als unabhängiger Dienst im System und kommuniziert lokal, um einen hochoptimierten persönlichen Intelligenzknoten zu bilden."
+  cards:
+    agent:
+      description: "CLI-Agent zur Orchestrierung von Systemaktionen über das Agent Control Protocol (ACP), angetrieben von goose. Enthält Ein-Zeilen-Installationsskripte für Windows, Linux und macOS."
+      linkText: "agent entdecken →"
+    desktop:
+      description: "Eigenständiges Desktop-Erlebnis für Windows und Linux, plus Browser-Modus. Nativ mit lokaler Prozessausführung oder über den Web-Client nutzbar."
+      linkText: "desktop entdecken →"
+    assistant:
+      description: "Android Companion-App zum Ausführen von Tools, Verbinden mit dem Desktop und Bereithalten von Arbeiten auch offline unterwegs. Synchronisiert automatisch bei Wiederverbindung."
+      linkText: "assistant entdecken →"
+    server:
+      description: "Verteilte Modellbereitstellungsebene für effiziente, hochskalierende Inferenz über lokale GPUs und mehrere Geräte hinweg."
+      linkText: "server entdecken →"
+    router:
+      description: "Absichtsmodell, das Benutzeranfragen klassifiziert und für jeden Turn die passende Fähigkeit und das richtige Modell-Tier auswählt."
+      linkText: "router entdecken →"
+    learn:
+      description: "Trainingsframework für das Router-Intent-Modell. Nutzt deine eigene Agenten-Interaktionshistorie, um Vorhersagen im Laufe der Zeit zu optimieren."
+      linkText: "learn entdecken →"
+developer:
+  eyebrow: "Für Entwickler"
+  title: "Keine Server, keine Cloud, keine Sorgen."
+  description: "Entwickle kleine Web-Apps (Zeug), binde sie in das hirn-Ökosystem ein und vergiss den Rest. Keine Server, keine Deployment-Pipelines, keine Cloud-Rechnungen."
+  features:
+    - eyebrow: "Null Infrastruktur"
+      title: "Keine Server zu betreiben"
+      description: "Zeug läuft auf dem Gerät des Nutzers. Kein Backend zu betreiben, keine Datenbank zu sichern, keine Rate-Limits zu verwalten."
+    - eyebrow: "Eigene Oberfläche"
+      title: "Deine eigene Benutzeroberfläche"
+      description: "Liefere eine vollständige HTML- und JS-Oberfläche aus, die sich in hirn mit einem bidirektionalen, echtzeitfähigen und komplett offline-fähigen SDK öffnet."
+    - eyebrow: "Ökosystem"
+      title: "Einbinden statt aufbauen"
+      description: "Konzentriere dich auf das, was dein Skill wirklich tut. Bereitstellung, Sicherheit und Dateninfrastruktur sind kein Problem."
+  privacyBanner: "Alles bleibt auf deiner lokalen Hardware. Keine Telemetrie, keine Datenerfassung, keine Ausnahmen. Nicht jetzt, nicht jemals. Deine Daten, deine Modelle, deine Entscheidungen."
+waitlist:
+  eyebrow: "Zugang"
+  title: "Erhalte Zugang zu hirn."
+  description: "Wir bauen ein wirklich offenes, souveränes System. Melde dich an, um frühe Entwickler-Releases zu erhalten und die Zukunft von hirn mitzugestalten."
+license:
+  eyebrow: "Lizenzierung & Kosten"
+  title: "100% Kostenlos für die private Nutzung"
+  description: "hirn wurde für digitale Souveränität und lokale Datenverarbeitung entwickelt. Der gesamte Core-Software-Stack ist Open Source und selbst hostbar."
+  points:
+    - title: "Private & Nicht-Kommerzielle Nutzung"
+      description: "Vollständig kostenlos für die persönliche und nicht-kommerzielle Nutzung mit uneingeschränktem Zugriff auf alle Hauptfunktionen."
+      badge: "Kostenlos"
+    - title: "Kommerzielle Nutzung"
+      description: "Erfordert einen gültigen Lizenzschlüssel (Einmalkauf) oder ein aktives Hirn Sync Abonnement für kommerzielle Anwendungen."
+      badge: "Kommerziell"
+    - title: "Open Source & Selbst Hostbar"
+      description: "Der gesamte Software-Stack inklusive Protokolle, SDKs und verschlüsselter Relay-Server ist zu 100% Open Source und selbst hostbar."
+      badge: "Open Source"
+  note: "Du benötigst kein Abonnement, um alle Funktionen zu nutzen. Das Hirn Sync Abo bietet lediglich eine komfortable Möglichkeit, deine Geräte ohne eigene Relay-Infrastruktur zu synchronisieren."
+---

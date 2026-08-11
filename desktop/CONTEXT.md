@@ -24,6 +24,10 @@ The core transport driver connecting to `hirn serve --acp "<command>"` or networ
 The multi-device synchronization transport enabling WebRTC P2P agent connections and encrypted store-and-forward message queuing (`https://agent.hirn-labs.com/connect?peer=<id>&relay=<url>&fingerprint=<sha256>`). The signaling relay server is open source and self-hostable, with configurable endpoints across Desktop UI, Agent CLI, and Mobile Assistant.
 *Avoid*: Hardcoding relay URLs or making self-hosted relays incompatible.
 
+**Auto-Updater (`tauri-plugin-updater`)**:
+The native Tauri v2 auto-update plugin configured in `src-tauri/tauri.conf.json`. On application startup, the Svelte 5 frontend checks GitHub Releases for new binary releases, downloads updates in the background, and prompts the user for a seamless restart.
+*Avoid*: Forcing manual script re-downloads or interrupting active chat sessions during update checks.
+
 **Commercial Licensing & Sync Model**:
 The licensing framework requiring a License Key (one-time purchase) or active Hirn Sync Subscription for any commercial usage, while remaining free for personal/non-commercial use.
 *Avoid*: DRM locks on local-first offline CLI features.
