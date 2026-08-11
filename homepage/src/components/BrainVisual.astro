@@ -11,7 +11,7 @@ const { lang = "en" } = Astro.props;
 
 // Fetch all service entries for the given language
 const services = await getCollection("services", (entry) =>
-  entry.id.startsWith(`${lang}/`)
+  entry.id.startsWith(`${lang}/`) && !entry.id.endsWith("/values")
 );
 
 // Standard angles for 3-left / 3-right distribution with natural top & bottom spacing

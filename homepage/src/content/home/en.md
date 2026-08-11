@@ -86,8 +86,8 @@ developer:
       description: "Focus on what your skill actually does. Deployment, security, and data infrastructure are not a worry."
   privacyBanner: "Everything stays on your local hardware. No corporate telemetry, no data collection, no exceptions. Not now, not ever. Your data, your models, your decisions."
 waitlist:
-  eyebrow: "Join the journey"
-  title: "Be the first to run hirn."
+  eyebrow: "Get early access"
+  title: "Get early access to hirn."
   description: "We are building a truly open, sovereign system. Sign up to get early developer releases and shape how hirn evolves."
 license:
   eyebrow: "Licensing & Costs"

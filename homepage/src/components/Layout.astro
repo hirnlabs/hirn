@@ -145,7 +145,7 @@ try {
 		<!-- Footer -->
 		<footer class="border-t border-border py-8 bg-surface/30 transition-colors duration-300 mt-20">
 			<div class="wrap flex flex-wrap items-center justify-between gap-4">
-				<span class="font-mono text-xs text-weak">&copy; 2026 focccus.dev &mdash; hirn</span>
+				<span class="font-mono text-xs text-weak">&copy; 2026 hirnlabs.xyz</span>
 
 				<div class="flex items-center gap-6">
 					<!-- Footer Language Switcher -->
@@ -157,7 +157,8 @@ try {
 					</div>
 
 					<div class="flex gap-4">
-						<a href={`${navPrefix}/#waitlist`} class="font-mono text-xs text-weak hover:text-secondary transition-colors">Waitlist</a>
+						<a href={`${navPrefix}/values`} class="font-mono text-xs text-weak hover:text-secondary transition-colors">{lang === "de" ? "Werte" : "Values"}</a>
+						<a href={`${navPrefix}/#waitlist`} class="font-mono text-xs text-weak hover:text-secondary transition-colors">{lang === "de" ? "Zugang" : "Early Access"}</a>
 						<a href="https://github.com/hirnlabs/hirn" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-weak hover:text-secondary transition-colors">GitHub</a>
 						<a href="https://www.instagram.com/hirnlabs" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-weak hover:text-secondary transition-colors">Instagram</a>
 					</div>

@@ -14,18 +14,23 @@
 		"check": "astro check",
 		"lint": "biome check ."
 	},
+	"overrides": {
+		"vite": "^7"
+	},
 	"devDependencies": {
 		"@astrojs/check": "^0.9.4",
 		"@biomejs/biome": "^1.9.4",
 		"typescript": "^5.7.3"
 	},
 	"dependencies": {
+		"@astrojs/svelte": "^9.0.1",
 		"@lucide/astro": "^1.29.0",
 		"@sentry/astro": "^10.57.0",
 		"@spotlightjs/astro": "^3.2.6",
-		"@tailwindcss/vite": "^4.3.1",
+		"@tailwindcss/vite": "4.0.9",
 		"astro": "^6.4.6",
 		"mermaid": "^11.16.1",
-		"tailwindcss": "^4.3.1"
+		"svelte": "^5.56.8",
+		"tailwindcss": "4.0.9"
 	}
 }
