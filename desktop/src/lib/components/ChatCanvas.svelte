@@ -1,10 +1,15 @@
 <script lang="ts">
+  import * as Kbd from './ui/kbd';
+  import { keybindingStore } from '../stores/keybindings.svelte';
+  import { ModeConfigStore } from '../stores/mode-config.svelte';
+  import { onMount } from 'svelte';
   import type { SessionStore } from '../stores/session.svelte';
   import type { AcpModel } from '../types/acp';
   import ToolExecutionCard from './ToolExecutionCard.svelte';
   import ErrorCard from './ErrorCard.svelte';
   import * as InputGroup from './ui/input-group';
   import * as DropdownMenu from './ui/dropdown-menu';
+  import * as Select from './ui/select';
   import { Separator } from './ui/separator';
   import { Input } from './ui/input';
   import { Badge } from './ui/badge';
@@ -16,11 +21,13 @@
     Star, 
     Check, 
     Compass,
+    Brain,
     Wrench,
     Sparkles,
     Play,
     Plus as IconPlus,
     ArrowUp as ArrowUpIcon,
+    CornerDownLeft,
     File,
     Folder,
     Mic,
@@ -33,15 +40,21 @@
     Bot,
     FileText,
     Info,
-    Brain,
     RefreshCw,
     ThumbsUp,
     ThumbsDown,
     GitBranch,
-    Repeat
+    Repeat,
+    SlidersHorizontal,
+    Settings,
+    ChevronRight,
+    Zap,
+    ShieldCheck,
+    MessageSquare
   } from '@lucide/svelte';
 
   let { store }: { store: SessionStore } = $props();
+  let modeStore = $derived(new ModeConfigStore(store));
   let promptText = $state('');
 
   const recentApps = [
@@ -116,9 +129,10 @@
 
 
   let isModelMenuOpen = $state(false);
+  let isSettingsPanelOpen = $state(false);
+  let isModeMenuOpen = $state(false);
   let isToolsMenuOpen = $state(false);
   let isAttachMenuOpen = $state(false);
-  let searchQuery = $state('');
   let searchQuery = $state('');
   let toolsSearchQuery = $state('');
   let editorRef = $state<HTMLDivElement | null>(null);
@@ -571,12 +585,33 @@
     }
   }
 
-  // Unified Attachment Menu Triggers
-  function toggleAttachMenu(e: MouseEvent) {
-    e.stopPropagation();
-    isAttachMenuOpen = !isAttachMenuOpen;
+  function togglePopover(name: 'model' | 'mode' | 'tools' | 'attach', e?: Event) {
+    if (e) e.stopPropagation();
+    isModelMenuOpen = name === 'model' ? !isModelMenuOpen : false;
+    isModeMenuOpen = name === 'mode' ? !isModeMenuOpen : false;
+    isToolsMenuOpen = name === 'tools' ? !isToolsMenuOpen : false;
+    isAttachMenuOpen = name === 'attach' ? !isAttachMenuOpen : false;
+  }
+
+  function openToolsSettings(e?: Event) {
+    if (e) e.stopPropagation();
     isModelMenuOpen = false;
+    isModeMenuOpen = false;
     isToolsMenuOpen = false;
+    isAttachMenuOpen = false;
+    isSettingsPanelOpen = true;
+
+    setTimeout(() => {
+      const target = document.getElementById('tools-permissions-section');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 80);
+  }
+
+  // Unified Attachment Menu Triggers
+  function toggleAttachMenu(e: Event) {
+    togglePopover('attach', e);
   }
 
   function handleAttachFiles() {
@@ -687,6 +722,9 @@
   let thoughtLevels = $derived(activeSession?.thoughtLevelConfig?.levels ?? []);
   let thinkingEffort = $derived(activeSession?.thoughtLevelConfig?.currentValue ?? 'off');
   let thinkingIdx = $derived(thoughtLevels.findIndex(l => l.value === thinkingEffort));
+
+  let modeConfig = $derived(activeSession?.modeConfig);
+  let currentMode = $derived(modeConfig?.modes.find(m => m.id === modeConfig.currentModeId) ?? modeConfig?.modes[0]);
 
   function setThinkingLevel(value: string) {
     if (!activeSession?.thoughtLevelConfig) return;
@@ -846,10 +884,79 @@
     }
   }
 
+  onMount(() => {
+    keybindingStore.registerCommand('popover:toggle-model', () => togglePopover('model'));
+    keybindingStore.registerCommand('popover:toggle-mode', () => togglePopover('mode'));
+    keybindingStore.registerCommand('popover:toggle-tools', () => togglePopover('tools'));
+    keybindingStore.registerCommand('popover:toggle-attach', () => togglePopover('attach'));
+    keybindingStore.registerCommand('voice:toggle-recording', () => toggleVoiceRecording());
+    keybindingStore.registerCommand('sidebar:toggle-settings', () => { isSettingsPanelOpen = !isSettingsPanelOpen; });
+    keybindingStore.registerCommand('popover:close-all', () => {
+      isModelMenuOpen = false;
+      isModeMenuOpen = false;
+      isToolsMenuOpen = false;
+      isAttachMenuOpen = false;
+      isSettingsPanelOpen = false;
+      isSlashMenuOpen = false;
+      isAtMenuOpen = false;
+      (document.activeElement as HTMLElement)?.blur();
+    });
+    keybindingStore.registerCommand('chat:send-prompt', () => handleSubmit());
+    keybindingStore.registerCommand('sidebar:open-settings', () => {
+      isModelMenuOpen = false;
+      isModeMenuOpen = false;
+      isSettingsPanelOpen = true;
+    });
+    keybindingStore.registerCommand('attach:files', () => handleAttachFiles());
+    keybindingStore.registerCommand('attach:folder', () => handleAttachFolder());
+
+    for (let i = 0; i < 9; i++) {
+      keybindingStore.registerCommand(`model:select-index-${i}`, () => {
+        const available = activeSession?.availableModels || [];
+        const favs = favoriteModelIds.map(id => available.find(m => m.id === id)).filter((m): m is AcpModel => !!m);
+        const list = favs.length > 0 ? favs : available;
+        if (list[i]) {
+          selectModel(list[i].id);
+          isModelMenuOpen = false;
+        }
+      });
+      keybindingStore.registerCommand(`mode:select-index-${i}`, () => {
+        if (modeConfig?.modes[i] && activeSession) {
+          store.setMode(activeSession.id, modeConfig.modes[i].id);
+          isModeMenuOpen = false;
+        }
+      });
+    }
+
+    keybindingStore.registerCommand('thinking:set-off', () => { setThinkingLevel('off'); isModeMenuOpen = false; });
+    keybindingStore.registerCommand('thinking:set-low', () => { setThinkingLevel('low'); isModeMenuOpen = false; });
+    keybindingStore.registerCommand('thinking:set-mid', () => { setThinkingLevel('mid'); isModeMenuOpen = false; });
+    keybindingStore.registerCommand('thinking:set-high', () => { setThinkingLevel('high'); isModeMenuOpen = false; });
+    keybindingStore.registerCommand('thinking:set-max', () => { setThinkingLevel('max'); isModeMenuOpen = false; });
+  });
+
+  function handleGlobalKeyUp(event: KeyboardEvent) {
+    keybindingStore.handleKeyUp(event);
+  }
+
+  function handleGlobalKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Control' || event.key === 'Alt' || event.key === 'Meta') {
+      keybindingStore.setCtrlPressed(true);
+    }
+
+    const currentContext = isModelMenuOpen ? 'model_popover' : isModeMenuOpen ? 'mode_popover' : isAttachMenuOpen ? 'attach_popover' : 'global';
+    
+    // Delegate event to modular keybinding store
+    keybindingStore.handleKeyEvent(event, currentContext);
+  }
+
   function handleBackdropClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
     if (!target.closest('.model-picker-container')) {
       isModelMenuOpen = false;
+    }
+    if (!target.closest('.mode-picker-container')) {
+      isModeMenuOpen = false;
     }
     if (!target.closest('.tools-picker-container')) {
       isToolsMenuOpen = false;
@@ -858,12 +965,29 @@
       isAttachMenuOpen = false;
     }
   }
+
+  function focusInput(node: HTMLElement) {
+    node.focus();
+  }
+
+  function getModeIcon(modeId?: string) {
+    if (!modeId) return Brain;
+    const lower = modeId.toLowerCase();
+    if (lower.includes('plan') || lower.includes('think') || lower.includes('reason')) return Brain;
+    if (lower.includes('ask') || lower.includes('chat')) return MessageSquare;
+    if (lower.includes('auto') || lower.includes('agent')) return Zap;
+    if (lower.includes('approve') || lower.includes('guard') || lower.includes('secure')) return ShieldCheck;
+    if (lower.includes('research') || lower.includes('explore')) return Compass;
+    if (lower.includes('code') || lower.includes('dev')) return Code;
+    return Brain;
+  }
 </script>
 
-<svelte:window onclick={handleBackdropClick} />
+<svelte:window onkeydown={handleGlobalKeyDown} onkeyup={handleGlobalKeyUp} onblur={() => keybindingStore.setCtrlPressed(false)} onclick={handleBackdropClick} />
 
-<div class="flex-1 flex flex-col h-screen bg-background text-foreground overflow-x-hidden relative">
-  {#if activeSession}
+<div class="flex-1 flex h-screen bg-background text-foreground overflow-hidden">
+  <div class="flex-1 flex flex-col h-full min-w-0 relative">
+    {#if activeSession}
     <!-- Header with centered Model picker (LibreChat Style) -->
     <header class="flex items-center justify-between px-6 py-3 border-b border-border/60 bg-background relative z-40">
       <div class="flex flex-col min-w-0">
@@ -929,47 +1053,6 @@
 
                   <!-- Response actions -->
                   <div class="flex items-center gap-0.5 mt-1.5 select-none">
-                    <!-- Diagnostics info icon with hover popover (seamless hover bridge & expanded card design) -->
-                    <div class="relative group/info">
-                      <button
-                        type="button"
-                        class="p-1 rounded-md text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/60 transition-colors"
-                        title="Response diagnostics"
-                      >
-                        <Info class="size-3.5" />
-                      </button>
-                      <div
-                        class="absolute bottom-full left-0 mb-0 pb-2 opacity-0 pointer-events-none group-hover/info:opacity-100 group-hover/info:pointer-events-auto transition-opacity duration-150 z-50"
-                      >
-                        <div class="w-64 p-3 rounded-2xl bg-popover border border-border shadow-2xl text-xs flex flex-col gap-2 font-sans select-text">
-                          <div class="flex items-center justify-between border-b border-border/50 pb-2">
-                            <span class="font-semibold text-foreground truncate max-w-[150px]">{selectedModel?.name ?? 'model'}</span>
-                            <span class="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono border border-border/30 shrink-0">{selectedModel?.provider ?? 'Local'}</span>
-                          </div>
-
-                          <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                            <div class="flex flex-col bg-muted/40 p-2 rounded-xl border border-border/30">
-                              <span class="text-[9px] text-muted-foreground uppercase font-sans font-medium">Speed</span>
-                              <span class="text-foreground font-semibold">{msg.tokensPerSec ?? 42} tok/s</span>
-                            </div>
-                            <div class="flex flex-col bg-muted/40 p-2 rounded-xl border border-border/30">
-                              <span class="text-[9px] text-muted-foreground uppercase font-sans font-medium">Latency</span>
-                              <span class="text-foreground font-semibold">{msg.latencyMs ?? 320} ms</span>
-                            </div>
-                            <div class="flex flex-col bg-muted/40 p-2 rounded-xl border border-border/30 col-span-2">
-                              <div class="flex items-center justify-between">
-                                <span class="text-[9px] text-muted-foreground uppercase font-sans font-medium">Context Window</span>
-                                <span class="text-foreground font-semibold font-mono text-[10px]">{usedStr} / {maxStr} ({pctCtx}%)</span>
-                              </div>
-                              <div class="w-full h-1.5 rounded-full bg-muted mt-1.5 overflow-hidden">
-                                <div class="h-full bg-primary rounded-full transition-all" style="width: {pctCtx}%"></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <!-- Refresh / Regenerate -->
                     <button
                       type="button"
@@ -1014,6 +1097,47 @@
                     >
                       <Repeat class="size-3.5" />
                     </button>
+
+                    <!-- Diagnostics info icon with hover popover (seamless hover bridge & expanded card design) -->
+                    <div class="relative group/info ml-auto">
+                      <button
+                        type="button"
+                        class="px-1.5 py-0.5 rounded-md text-[11px] font-mono text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/60 transition-colors"
+                        title="Response diagnostics"
+                      >
+                        {usedStr} tokens
+                      </button>
+                      <div
+                        class="absolute bottom-full right-0 mb-0 pb-2 opacity-0 pointer-events-none group-hover/info:opacity-100 group-hover/info:pointer-events-auto transition-opacity duration-150 z-50"
+                      >
+                        <div class="w-64 p-3 rounded-2xl bg-popover border border-border shadow-2xl text-xs flex flex-col gap-2 font-sans select-text">
+                          <div class="flex items-center justify-between border-b border-border/50 pb-2">
+                            <span class="font-semibold text-foreground truncate max-w-[150px]">{selectedModel?.name ?? 'model'}</span>
+                            <span class="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono border border-border/30 shrink-0">{selectedModel?.provider ?? 'Local'}</span>
+                          </div>
+
+                          <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                            <div class="flex flex-col bg-muted/40 p-2 rounded-xl border border-border/30">
+                              <span class="text-[9px] text-muted-foreground uppercase font-sans font-medium">Speed</span>
+                              <span class="text-foreground font-semibold">{msg.tokensPerSec ?? 42} tok/s</span>
+                            </div>
+                            <div class="flex flex-col bg-muted/40 p-2 rounded-xl border border-border/30">
+                              <span class="text-[9px] text-muted-foreground uppercase font-sans font-medium">Latency</span>
+                              <span class="text-foreground font-semibold">{msg.latencyMs ?? 320} ms</span>
+                            </div>
+                            <div class="flex flex-col bg-muted/40 p-2 rounded-xl border border-border/30 col-span-2">
+                              <div class="flex items-center justify-between">
+                                <span class="text-[9px] text-muted-foreground uppercase font-sans font-medium">Context Window</span>
+                                <span class="text-foreground font-semibold font-mono text-[10px]">{usedStr} / {maxStr} ({pctCtx}%)</span>
+                              </div>
+                              <div class="w-full h-1.5 rounded-full bg-muted mt-1.5 overflow-hidden">
+                                <div class="h-full bg-primary rounded-full transition-all" style="width: {pctCtx}%"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               {/if}
@@ -1051,7 +1175,7 @@
                   class="flex flex-col items-center gap-2 group cursor-pointer transition-all"
                   title="Use {app.name}"
                 >
-                  <div class="size-12 rounded-2xl bg-muted/50 hover:bg-muted border border-border/40 group-hover:border-border flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 active:scale-95 transition-all">
+                  <div class="size-12 rounded-2xl bg-card hover:bg-muted border border-border/80 group-hover:border-border flex items-center justify-center shadow-xs group-hover:shadow-md group-hover:scale-105 active:scale-95 transition-all">
                     <app.icon class="size-5 text-foreground/80 group-hover:text-primary transition-colors shrink-0" />
                   </div>
                   <span class="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors max-w-[80px] truncate text-center">
@@ -1083,13 +1207,248 @@
   {:else}
     <div class="flex-1 flex flex-col items-center justify-center text-center gap-3">
       <Compass class="size-10 text-gray-500 animate-spin" />
-      <p class="text-sm text-gray-400">No active session selected. Create or select a session to begin.</p>
     </div>
   {/if}
 </div>
 
+  <!-- Inline Settings Sidebar Panel (Next to chat window) -->
+  {#if isSettingsPanelOpen}
+    <aside 
+      class="w-[360px] h-full border-l border-border bg-card/30 flex flex-col shrink-0 animate-in slide-in-from-right duration-150 relative z-20"
+    >
+      <!-- Sidebar Header -->
+      <div class="flex items-center justify-between px-4 py-3.5 border-b border-border/60 bg-background">
+        <div class="flex items-center gap-2 min-w-0">
+          <Sparkles class="size-4 text-primary shrink-0" />
+          <div class="flex flex-col min-w-0">
+            <h3 class="text-sm font-semibold text-foreground truncate">Settings</h3>
+            {#if activeSession}
+              <span class="text-[10px] text-muted-foreground font-mono truncate">{activeSession.agentName}</span>
+            {/if}
+          </div>
+        </div>
+        <button 
+          onclick={() => isSettingsPanelOpen = false}
+          class="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
+          title="Close settings sidebar"
+        >
+          <X class="size-4" />
+        </button>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin">
+        <!-- 1. Search Box -->
+        <div class="relative">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search models..."
+            class="w-full bg-muted/60 border border-border rounded-xl pl-9 pr-8 py-2 text-xs text-foreground placeholder-muted-foreground/60 outline-none focus:ring-1 focus:ring-primary transition-all"
+            bind:value={searchQuery}
+          />
+          {#if searchQuery}
+            <button 
+              onclick={() => searchQuery = ''}
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X class="size-3.5" />
+            </button>
+          {/if}
+        </div>
+
+        <!-- 2. Models List -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Available Models</span>
+            <span class="text-[10px] font-mono text-muted-foreground">{filteredModels().length} model(s)</span>
+          </div>
+
+          {#each groupedModels() as group}
+            <div class="space-y-1">
+              <div class="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1 font-mono">
+                {group.header}
+              </div>
+              {#each group.models as model}
+                <button
+                  onclick={() => { selectModel(model.id); }}
+                  class="w-full flex items-center justify-between p-2.5 rounded-xl text-xs text-left transition-all cursor-pointer border {model.id === activeSession?.selectedModelId ? 'bg-primary/10 border-primary text-foreground font-medium shadow-xs' : 'bg-muted/30 border-transparent hover:bg-muted/70 text-foreground/80'}"
+                >
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="size-6 rounded-lg bg-background flex items-center justify-center text-[10px] font-mono border border-border shrink-0 font-bold">
+                      {#if model.provider.includes('Google')}G{:else if model.provider.includes('Anthropic')}A{:else if model.provider.includes('Meta')}M{:else if model.provider.includes('LMStudio')}LM{:else}L{/if}
+                    </span>
+                    <div class="flex flex-col min-w-0">
+                      <span class="truncate font-medium">{model.name}</span>
+                      <span class="text-[10px] text-muted-foreground/70 font-mono truncate">{model.provider}</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <span
+                      onclick={(e) => toggleFavorite(e, model.id)}
+                      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleFavorite(e, model.id); }}
+                      role="button"
+                      tabindex="0"
+                      class="p-1 hover:text-yellow-400 text-muted-foreground/40 transition-colors cursor-pointer"
+                    >
+                      <Star class="size-3.5 {favoriteModelIds.includes(model.id) ? 'fill-yellow-400 text-yellow-400' : ''}" />
+                    </span>
+                    {#if model.id === activeSession?.selectedModelId}
+                      <Check class="size-4 text-emerald-400 shrink-0" />
+                    {/if}
+                  </div>
+                </button>
+              {/each}
+            </div>
+          {/each}
+        </div>
+
+        <!-- 3. Agent Mode Section -->
+        {#if modeConfig && modeConfig.modes.length > 0}
+        <div class="space-y-2 pt-3 border-t border-border">
+          <div class="flex items-center gap-2 mb-1">
+            <Compass class="size-3.5 text-primary" />
+            <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Agent Mode</span>
+          </div>
+          <div class="grid grid-cols-1 gap-1.5">
+            {#each modeConfig.modes as m}
+              <button
+                onclick={() => { if (activeSession) store.setMode(activeSession.id, m.id); }}
+                class="w-full flex items-center justify-between p-2.5 rounded-xl text-xs text-left transition-all cursor-pointer border {m.id === modeConfig.currentModeId ? 'bg-primary/10 border-primary text-foreground font-medium shadow-xs' : 'bg-muted/30 border-transparent hover:bg-muted/70 text-foreground/80'}"
+              >
+                <div class="flex flex-col min-w-0">
+                  <span class="font-medium capitalize">{m.name}</span>
+                  {#if m.description}
+                    <span class="text-[10px] text-muted-foreground/70 truncate">{m.description}</span>
+                  {/if}
+                </div>
+                {#if m.id === modeConfig.currentModeId}
+                  <Check class="size-4 text-emerald-400 shrink-0 ml-2" />
+                {/if}
+              </button>
+            {/each}
+          </div>
+        </div>
+        {/if}
+
+        <!-- 4. Thinking Effort Section -->
+        {#if isThinkingSupported && thoughtLevels.length > 1}
+        <div class="space-y-3 pt-3 border-t border-border">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <Brain class="size-3.5 text-primary" />
+              <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Thinking Budget</span>
+            </div>
+            <span class="text-xs font-mono font-medium text-foreground capitalize px-2 py-0.5 rounded bg-muted border border-border">{thinkingEffort}</span>
+          </div>
+          <div class="relative h-6 flex items-center" role="group" aria-label="Thinking effort slider">
+            <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-muted border border-border"></div>
+            <div class="absolute top-1/2 -translate-y-1/2 h-2 rounded-full bg-primary left-0 transition-all" style="width: {thoughtLevels.length > 1 ? thinkingIdx / (thoughtLevels.length - 1) * 100 : 0}%"></div>
+            {#each thoughtLevels as level, i}
+              <button
+                onclick={() => setThinkingLevel(level.value)}
+                class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-6 flex items-center justify-center cursor-pointer z-10"
+                style="left: {thoughtLevels.length > 1 ? i / (thoughtLevels.length - 1) * 100 : 0}%"
+                title={level.name}
+              >
+                <span class="size-2.5 rounded-full transition-all {i <= thinkingIdx ? 'bg-primary' : 'bg-muted-foreground/30'} {i === thinkingIdx ? 'size-4 bg-primary ring-4 ring-background shadow-md' : ''}"></span>
+              </button>
+            {/each}
+          </div>
+          <div class="flex items-center justify-between px-0.5">
+            {#each thoughtLevels as level, i}
+              <button
+                onclick={() => setThinkingLevel(level.value)}
+                class="text-[10px] font-mono capitalize cursor-pointer transition-colors {i === thinkingIdx ? 'text-foreground font-semibold' : 'text-muted-foreground/60 hover:text-muted-foreground'}"
+              >{level.name}</button>
+            {/each}
+          </div>
+        </div>
+        {/if}
+
+        <!-- 5. Tools & Extensions Section -->
+        <div id="tools-permissions-section" class="space-y-4 pt-4 border-t border-border">
+          <div class="flex items-center gap-2">
+            <Wrench class="size-3.5 text-primary" />
+            <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Tools & Permissions</span>
+          </div>
+          <div class="space-y-4">
+            {#each groupedExtensions() as group}
+              <div class="space-y-2">
+                <div class="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1 font-mono">
+                  {group.header}
+                </div>
+                <div class="space-y-2">
+                  {#each group.items as ext (ext.id)}
+                    <div class="p-3 rounded-xl bg-card border border-border/80 shadow-2xs space-y-2.5">
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                          <span class="text-base shrink-0">{ext.icon}</span>
+                          <span class="text-xs font-semibold text-foreground truncate">{ext.name}</span>
+                        </div>
+
+                        <div class="w-28 shrink-0">
+                          <Select.Root
+                            type="single"
+                            value={ext.permission}
+                            onValueChange={(v) => setParentPermission(ext.id, v as ParentPermissionState)}
+                          >
+                            <Select.Trigger class="h-7 text-[11px] font-mono bg-muted/60 hover:bg-muted border-border/80 px-2.5 py-0 flex items-center justify-between w-full">
+                              <span class="capitalize">
+                                {ext.permission === 'per_tool' ? 'Per Tool' : ext.permission}
+                              </span>
+                            </Select.Trigger>
+                            <Select.Content class="bg-popover border-border text-popover-foreground z-50">
+                              {#if ext.tools && ext.tools.length > 0}
+                                <Select.Item value="per_tool" class="text-xs font-mono cursor-pointer">Per Tool</Select.Item>
+                              {/if}
+                              <Select.Item value="off" class="text-xs font-mono cursor-pointer">Off</Select.Item>
+                              <Select.Item value="ask" class="text-xs font-mono cursor-pointer">Ask</Select.Item>
+                              <Select.Item value="allow" class="text-xs font-mono cursor-pointer">Allow</Select.Item>
+                            </Select.Content>
+                          </Select.Root>
+                        </div>
+                      </div>
+
+                      {#if ext.permission === 'per_tool' && ext.tools && ext.tools.length > 0}
+                        <div class="pt-2 border-t border-border/40 space-y-1.5 pl-1">
+                          {#each ext.tools as tool (tool.id)}
+                            <div class="flex items-center justify-between gap-2 py-1 px-2 hover:bg-muted/40 rounded-lg">
+                              <span class="text-[11px] text-muted-foreground font-mono truncate">{tool.name}</span>
+                              <div class="w-24 shrink-0">
+                                <Select.Root
+                                  type="single"
+                                  value={tool.permission}
+                                  onValueChange={(v) => setToolPermission(ext.id, tool.id, v as PermissionState)}
+                                >
+                                  <Select.Trigger class="h-6 text-[10px] font-mono bg-background border-border/70 px-2 py-0 flex items-center justify-between w-full">
+                                    <span class="capitalize">{tool.permission}</span>
+                                  </Select.Trigger>
+                                  <Select.Content class="bg-popover border-border text-popover-foreground z-50">
+                                    <Select.Item value="off" class="text-[11px] font-mono cursor-pointer">Off</Select.Item>
+                                    <Select.Item value="ask" class="text-[11px] font-mono cursor-pointer">Ask</Select.Item>
+                                    <Select.Item value="allow" class="text-[11px] font-mono cursor-pointer">Allow</Select.Item>
+                                  </Select.Content>
+                                </Select.Root>
+                              </div>
+                            </div>
+                          {/each}
+                        </div>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      </div>
+    </aside>
+  {/if}
+</div>
+
 {#snippet promptWindow()}
-  <InputGroup.Root class="!opacity-100 !bg-muted/50 border !border-transparent focus-within:!border-border rounded-[24px] shadow-md focus-within:shadow-lg transition-all p-3 flex flex-col gap-2.5 relative group/prompt">
+  <InputGroup.Root class="!opacity-100 bg-card border border-border focus-within:border-foreground/40 rounded-[24px] shadow-sm hover:shadow-md focus-within:shadow-xl transition-all duration-200 p-3.5 flex flex-col gap-3 relative group/prompt">
     <!-- Autocomplete Popover for / Slash Commands (Grouped Sections, compact max-h-[190px]) -->
     {#if isSlashMenuOpen && flatSlashCommands().length > 0}
       <div class="absolute bottom-full left-3 mb-2 w-[320px] bg-popover border border-border text-popover-foreground rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col p-1.5 animate-in fade-in duration-100 max-h-[190px] overflow-y-auto">
@@ -1179,81 +1538,60 @@
     </div>
 
     <!-- Input bar tools -->
-    <InputGroup.Addon align="block-end" class="flex items-center border-t border-border/40 pt-2 px-1 relative">
-      <!-- Centered Voice Input Button & 3x Expanded Recording Pill (Aligned with bottom bar icons, original size-11) -->
-      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-10">
-        {#if !isRecording}
-          <button
-            onclick={toggleVoiceRecording}
-            class="size-11 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center font-bold group/voicebtn {promptText.trim() ? 'opacity-40 hover:opacity-100' : 'opacity-100'}"
-            title="Start Voice Recording"
-          >
-            <Mic class="size-5 stroke-[2.5] transition-transform group-hover/voicebtn:scale-110" />
-          </button>
-        {:else}
-          <!-- Centered 3x Width Recording Pill (Primary theme, waveform reacting to live microphone input, only X button) -->
-          <div class="h-11 px-3.5 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-between gap-2.5 animate-in fade-in zoom-in-95 duration-150 w-36">
-            <!-- Animated Waveform Bars reacting to microphone -->
-            <div class="flex items-center gap-1 h-5 flex-1 justify-center overflow-hidden">
-              {#each recordingBarHeights as height, i (i)}
-                <span
-                  class="w-1 bg-primary-foreground/90 rounded-full transition-all duration-100 shrink-0"
-                  style="height: {Math.min(height, 18)}px;"
-                ></span>
-              {/each}
-            </div>
-            
-            <!-- Only X button on the right -->
-            <button
-              onclick={stopVoiceRecording}
-              class="size-6 rounded-full hover:bg-primary-foreground/20 text-primary-foreground/90 hover:text-primary-foreground flex items-center justify-center transition-colors shrink-0 cursor-pointer"
-              title="Stop Recording"
-            >
-              <X class="size-4" />
-            </button>
-          </div>
-        {/if}
-      </div>
-      <!-- Left aligned controls -->
-      <div class="flex items-center gap-3">
-        <!-- Model Selection Trigger inside Prompt bottom bar -->
+    <InputGroup.Addon align="block-end" class="flex items-center justify-between gap-1.5 pt-1 border-t border-border/40 min-w-0 relative">
+      <!-- Left aligned controls: Model Selector -->
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        <!-- Model Selection & Quick Switcher Container -->
         <div class="relative model-picker-container">
+          {#if keybindingStore.isCtrlPressed}
+            <div class="absolute -top-7 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+              <Kbd.Group>
+                <Kbd.Root>Ctrl</Kbd.Root>
+                <Kbd.Root>M</Kbd.Root>
+              </Kbd.Group>
+            </div>
+          {/if}
           <button
-            onclick={(e) => { e.stopPropagation(); isModelMenuOpen = !isModelMenuOpen; isToolsMenuOpen = false; isAttachMenuOpen = false; }}
-            class="flex items-center gap-1.5 h-7 px-2.5 bg-muted hover:bg-muted/80 border border-border rounded-xl text-[10px] text-foreground/80 font-medium transition-all cursor-pointer"
-            title="Select AI Model"
+            onclick={(e) => togglePopover('model', e)}
+            class="flex items-center gap-2 h-8 px-2.5 bg-card hover:bg-muted border border-border/80 rounded-xl text-xs text-foreground font-medium transition-all cursor-pointer shadow-2xs"
+            title="Select Model or Open Configuration (Ctrl+M)"
           >
-            <span class="size-3.5 rounded bg-background flex items-center justify-center text-[8px] font-mono border border-border shrink-0 text-foreground mr-1">
+            <span class="size-4 rounded-md bg-muted flex items-center justify-center text-[9px] font-mono border border-border/50 shrink-0 text-foreground font-bold">
               {#if selectedModel?.provider.includes('Google')}G{:else if selectedModel?.provider.includes('Anthropic')}A{:else if selectedModel?.provider.includes('Meta')}M{:else if selectedModel?.provider.includes('LMStudio')}LM{:else}L{/if}
             </span>
-            <span>{selectedModel?.name || selectedModel?.id}{isThinkingSupported && thinkingEffort !== 'off' ? ` (${thinkingEffort})` : ''}</span>
-            <ChevronDown class="size-3 text-gray-500 ml-1" />
+            <span class="max-[600px]:hidden truncate max-w-[140px]">{selectedModel?.name || selectedModel?.id}</span>
+            <ChevronDown class="max-[600px]:hidden size-3.5 text-muted-foreground shrink-0" />
           </button>
 
+          <!-- Quick Switcher Popover -->
           {#if isModelMenuOpen}
             <div
-              class="absolute bottom-full left-0 mb-2 w-[320px] bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col p-0 animate-in fade-in duration-150"
+              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[300px] bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col p-0 animate-in fade-in duration-150"
             >
+              <!-- Search box -->
               <div class="p-2 border-b border-border flex items-center gap-2">
-                <Search class="size-4 text-gray-500 shrink-0" />
+                <Search class="size-3.5 text-muted-foreground shrink-0" />
                 <input
                   type="text"
-                  placeholder="Search models..."
-                  class="w-full bg-transparent border-none outline-none text-xs text-foreground placeholder-muted-foreground/60 py-1"
+                  use:focusInput
+                  placeholder="Quick search models..."
+                  class="w-full bg-transparent border-none outline-none text-xs text-foreground placeholder-muted-foreground/60 py-0.5"
                   bind:value={searchQuery}
                   onclick={(e) => e.stopPropagation()}
                 />
               </div>
-              <div class="max-h-[280px] overflow-y-auto p-1.5 flex flex-col gap-3">
+
+              <!-- Compact Model List -->
+              <div class="max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-2 scrollbar-thin">
                 {#each groupedModels() as group}
                   <div class="flex flex-col gap-0.5">
-                    <div class="text-[9px] font-semibold text-gray-500 uppercase tracking-wider px-2.5 py-1 font-mono">
+                    <div class="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-0.5 font-mono">
                       {group.header}
                     </div>
-                    {#each group.models as model}
+                    {#each group.models as model, mIdx}
                       <button
                         onclick={() => { selectModel(model.id); isModelMenuOpen = false; }}
-                        class="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs text-left hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer {model.id === activeSession?.selectedModelId ? 'bg-accent text-accent-foreground font-medium border border-border' : 'text-foreground/80'}"
+                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer {model.id === activeSession?.selectedModelId ? 'bg-accent text-accent-foreground font-medium border border-border' : 'text-foreground/80'}"
                       >
                         <div class="flex items-center gap-2 min-w-0">
                           <span class="size-4 rounded bg-muted flex items-center justify-center text-[9px] font-mono border border-border shrink-0">
@@ -1262,12 +1600,15 @@
                           <span class="truncate">{model.name}</span>
                         </div>
                         <div class="flex items-center gap-1">
+                          {#if keybindingStore.isCtrlPressed && mIdx < 9}
+                            <Kbd.Root>{mIdx + 1}</Kbd.Root>
+                          {/if}
                           <span
                             onclick={(e) => toggleFavorite(e, model.id)}
                             onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleFavorite(e, model.id); }}
                             role="button"
                             tabindex="0"
-                            class="p-1 hover:text-yellow-400 text-gray-500 transition-colors cursor-pointer"
+                            class="p-1 hover:text-yellow-400 text-muted-foreground/50 transition-colors cursor-pointer"
                           >
                             <Star class="size-3 {favoriteModelIds.includes(model.id) ? 'fill-yellow-400 text-yellow-400' : ''}" />
                           </span>
@@ -1281,64 +1622,199 @@
                 {/each}
               </div>
 
-              <!-- Thinking Effort Slider -->
-              {#if isThinkingSupported && thoughtLevels.length > 0}
-              <div class="p-2.5 border-t border-border">
-                <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center gap-1.5">
-                    <Brain class="size-3 text-muted-foreground" />
-                    <span class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-mono">Thinking</span>
-                  </div>
-                  <span class="text-[10px] font-mono text-foreground capitalize">{thinkingEffort}</span>
+              <!-- Bottom More Options Button -->
+              <button
+                onclick={(e) => { e.stopPropagation(); isModelMenuOpen = false; isSettingsPanelOpen = true; }}
+                class="w-full p-2.5 bg-muted/60 hover:bg-muted border-t border-border flex items-center justify-between text-xs font-medium text-foreground transition-all cursor-pointer group"
+              >
+                <div class="flex items-center gap-2">
+                  <SlidersHorizontal class="size-3.5 text-primary group-hover:rotate-90 transition-transform" />
+                  <span>More Options...</span>
                 </div>
-                <div class="relative h-5 flex items-center" onclick={(e) => e.stopPropagation()} role="group" aria-label="Thinking effort slider">
-                  <!-- Track background -->
-                  <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted-foreground/15"></div>
-                  <!-- Filled track -->
-                  <div class="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-primary left-0 transition-all" style="width: {thoughtLevels.length > 1 ? thinkingIdx / (thoughtLevels.length - 1) * 100 : 0}%"></div>
-                  <!-- Stop dots and clickable areas -->
-                  {#each thoughtLevels as level, i}
-                    <button
-                      onclick={() => setThinkingLevel(level.value)}
-                      class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-5 flex items-center justify-center cursor-pointer z-10"
-                      style="left: {thoughtLevels.length > 1 ? i / (thoughtLevels.length - 1) * 100 : 0}%"
-                      title={level.name}
-                    >
-                      <span class="size-2 rounded-full transition-all {i <= thinkingIdx ? 'bg-primary' : 'bg-muted-foreground/30'} {i === thinkingIdx ? 'size-3.5 bg-primary ring-2 ring-background shadow-sm' : ''}"></span>
-                    </button>
-                  {/each}
+                <div class="flex items-center gap-1.5">
+                  {#if keybindingStore.isCtrlPressed}
+                    <Kbd.Root>C</Kbd.Root>
+                  {/if}
+                  <ChevronRight class="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                 </div>
-                <div class="flex items-center justify-between mt-0.5">
-                  {#each thoughtLevels as level, i}
-                    <button
-                      onclick={(e) => { e.stopPropagation(); setThinkingLevel(level.value); }}
-                      class="text-[9px] font-mono capitalize cursor-pointer transition-colors {i === thinkingIdx ? 'text-foreground font-medium' : 'text-muted-foreground/50 hover:text-muted-foreground'}"
-                      style="width: {100 / thoughtLevels.length}%; text-align: {i === 0 ? 'left' : i === thoughtLevels.length - 1 ? 'right' : 'center'}"
-                    >{level.name}</button>
-                  {/each}
-                </div>
-              </div>
-              {/if}
+              </button>
             </div>
           {/if}
         </div>
+
+        <!-- Agent Mode & Options Container -->
+        {#if modeConfig && (modeConfig.modes.length > 0 || (isThinkingSupported && thoughtLevels.length > 1))}
+          {@const CurrentModeIcon = getModeIcon(modeConfig.currentModeId)}
+          <div class="relative mode-picker-container">
+            {#if keybindingStore.isCtrlPressed}
+              <div class="absolute -top-7 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+                <Kbd.Group>
+                  <Kbd.Root>Ctrl</Kbd.Root>
+                  <Kbd.Root>A</Kbd.Root>
+                </Kbd.Group>
+              </div>
+            {/if}
+            <button
+              onclick={(e) => togglePopover('mode', e)}
+              class="flex items-center justify-center size-8 bg-card hover:bg-muted border border-border/80 rounded-xl transition-all cursor-pointer shadow-2xs"
+              title="Select Agent Mode & Thinking Budget (Ctrl+A)"
+            >
+              <CurrentModeIcon class="size-4 text-primary shrink-0" />
+            </button>
+
+            <!-- Mode & Thinking Level Popover -->
+            {#if isModeMenuOpen}
+              <div
+                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[280px] bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col p-0 animate-in fade-in duration-150"
+              >
+                <div class="p-3 flex flex-col gap-3">
+                  <!-- Modes Header & Grid -->
+                  {#if modeConfig && modeConfig.modes.length > 0}
+                    <div class="space-y-1.5">
+                      <div class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-mono flex items-center justify-between">
+                        <span>Agent Mode</span>
+                        {#if keybindingStore.isCtrlPressed}
+                          <span class="text-[9px] text-muted-foreground/60 font-normal">[1-9]</span>
+                        {/if}
+                      </div>
+                      <div class="grid grid-cols-1 gap-1">
+                        {#each modeConfig.modes as m, mIdx}
+                          {@const ModeItemIcon = getModeIcon(m.id)}
+                          <button
+                            onclick={() => { if (activeSession) store.setMode(activeSession.id, m.id); isModeMenuOpen = false; }}
+                            class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left transition-all cursor-pointer border {m.id === modeConfig.currentModeId ? 'bg-primary/10 border-primary text-foreground font-medium shadow-xs' : 'bg-muted/30 border-transparent hover:bg-muted/70 text-foreground/80'}"
+                          >
+                            <div class="flex items-start gap-2 min-w-0">
+                              <ModeItemIcon class="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                              <div class="flex flex-col min-w-0">
+                                <span class="truncate capitalize font-medium">{m.name}</span>
+                                {#if m.description}
+                                  <span class="text-[10px] text-muted-foreground/70 truncate">{m.description}</span>
+                                {/if}
+                              </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0 ml-2">
+                              {#if keybindingStore.isCtrlPressed && mIdx < 9}
+                                <Kbd.Root>{mIdx + 1}</Kbd.Root>
+                              {/if}
+                              {#if m.id === modeConfig.currentModeId}
+                                <Check class="size-3.5 text-emerald-400 shrink-0" />
+                              {/if}
+                            </div>
+                          </button>
+                        {/each}
+                      </div>
+                    </div>
+                  {/if}
+
+                  <!-- Thinking Budget Section -->
+                  {#if isThinkingSupported && thoughtLevels.length > 1}
+                    <div class="space-y-2 pt-2 border-t border-border">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-mono">Thinking Budget</span>
+                        <span class="text-[10px] font-mono capitalize px-1.5 py-0.5 rounded bg-muted border border-border">{thinkingEffort}</span>
+                      </div>
+                      <div class="grid grid-cols-3 gap-1">
+                        {#each thoughtLevels as level}
+                          <button
+                            onclick={() => { setThinkingLevel(level.value); isModeMenuOpen = false; }}
+                            class="px-2 py-1 rounded-lg text-[10px] font-mono capitalize transition-all cursor-pointer border text-center flex items-center justify-center gap-1 {level.value === thinkingEffort ? 'bg-primary/10 border-primary text-foreground font-semibold shadow-xs' : 'bg-muted/30 border-transparent hover:bg-muted/70 text-muted-foreground'}"
+                          >
+                            <span>{level.name}</span>
+                            {#if keybindingStore.isCtrlPressed}
+                              <Kbd.Root class="h-4 px-1 text-[9px]">{level.name[0].toUpperCase()}</Kbd.Root>
+                            {/if}
+                          </button>
+                        {/each}
+                      </div>
+                    </div>
+                  {/if}
+                </div>
+
+                <!-- Bottom More Options Button -->
+                <button
+                  onclick={(e) => { e.stopPropagation(); isModeMenuOpen = false; isSettingsPanelOpen = true; }}
+                  class="w-full p-2.5 bg-muted/60 hover:bg-muted border-t border-border flex items-center justify-between text-xs font-medium text-foreground transition-all cursor-pointer group"
+                >
+                  <div class="flex items-center gap-2">
+                    <SlidersHorizontal class="size-3.5 text-primary group-hover:rotate-90 transition-transform" />
+                    <span>More Options...</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    {#if keybindingStore.isCtrlPressed}
+                      <Kbd.Root>C</Kbd.Root>
+                    {/if}
+                    <ChevronRight class="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </button>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
+
+      <!-- CENTER: Big Voice Input Mic Button -->
+      <div class="flex items-center justify-center shrink-0 px-1.5 z-10 relative">
+        {#if keybindingStore.isCtrlPressed}
+          <div class="absolute -top-7 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+            <Kbd.Group>
+              <Kbd.Root>Ctrl</Kbd.Root>
+              <Kbd.Root>R</Kbd.Root>
+            </Kbd.Group>
+          </div>
+        {/if}
+        {#if !isRecording}
+          <button
+            onclick={toggleVoiceRecording}
+            class="size-11 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center font-bold group/voicebtn {promptText.trim() ? 'opacity-50 hover:opacity-100' : 'opacity-100'}"
+            title="Start Voice Recording (Ctrl+R)"
+          >
+            <Mic class="size-5 stroke-[2.5] transition-transform group-hover/voicebtn:scale-110" />
+          </button>
+        {:else}
+          <div class="h-11 px-3.5 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-between gap-2.5 animate-in fade-in zoom-in-95 duration-150 w-36">
+            <div class="flex items-center gap-1 h-5 flex-1 justify-center overflow-hidden">
+              {#each recordingBarHeights as height, i (i)}
+                <span
+                  class="w-1 bg-primary-foreground/90 rounded-full transition-all duration-100 shrink-0"
+                  style="height: {Math.min(height, 18)}px;"
+                ></span>
+              {/each}
+            </div>
+            <button
+              onclick={stopVoiceRecording}
+              class="size-6 rounded-full hover:bg-primary-foreground/20 text-primary-foreground/90 hover:text-primary-foreground flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+              title="Stop Recording"
+            >
+              <X class="size-4" />
+            </button>
+          </div>
+        {/if}
       </div>
 
       <!-- Right aligned controls -->
-      <div class="flex items-center gap-1.5 ms-auto">
+      <div class="flex items-center gap-1 min-w-0 flex-1 justify-end">
         <!-- Tools Extensions Popover -->
         <div class="relative tools-picker-container">
+          {#if keybindingStore.isCtrlPressed}
+            <div class="absolute -top-7 right-1/2 translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+              <Kbd.Group>
+                <Kbd.Root>Ctrl</Kbd.Root>
+                <Kbd.Root>T</Kbd.Root>
+              </Kbd.Group>
+            </div>
+          {/if}
           <button
-            onclick={(e) => { e.stopPropagation(); isToolsMenuOpen = !isToolsMenuOpen; isModelMenuOpen = false; isAttachMenuOpen = false; }}
-            class="flex items-center gap-1.5 px-2.5 py-1 bg-muted hover:bg-muted/80 border border-border rounded-xl text-[10px] font-mono text-foreground/80 transition-all cursor-pointer h-7"
-            title="Session Extensions & Tool Permissions"
+            onclick={(e) => togglePopover('tools', e)}
+            class="flex items-center gap-1.5 px-2.5 bg-card hover:bg-muted border border-border/80 rounded-xl text-xs font-mono text-foreground/80 transition-all cursor-pointer h-8 shadow-2xs"
+            title="Session Extensions & Tool Permissions (Ctrl+T)"
           >
-            <Wrench class="size-3 text-gray-400" />
-            <span>{totalActiveToolsCount()}</span>
+            <Wrench class="size-3.5 text-gray-400" />
+            <span class="max-[600px]:hidden">{totalActiveToolsCount()}</span>
           </button>
 
           {#if isToolsMenuOpen}
-            <div class="absolute bottom-full right-0 mb-2 w-[320px] bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in duration-150">
+            <div class="absolute bottom-full right-1/2 translate-x-1/2 mb-2 w-[320px] bg-popover border border-border text-popover-foreground rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in duration-150">
               <div class="p-2 border-b border-border flex items-center gap-2">
                 <Search class="size-4 text-gray-500 shrink-0" />
                 <input
@@ -1352,85 +1828,97 @@
               <div class="max-h-[280px] overflow-y-auto p-1.5 flex flex-col gap-3">
                 {#each groupedExtensions() as group}
                   <div class="flex flex-col gap-0.5">
-                    <div class="text-[9px] font-semibold text-gray-500 uppercase tracking-wider px-2.5 py-1 font-mono">
+                    <div class="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-2.5 py-1 font-mono">
                       {group.header}
                     </div>
                     {#each group.items as ext (ext.id)}
                       <div
-                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left hover:bg-accent hover:text-accent-foreground transition-all cursor-pointer"
-                        role="button"
-                        tabindex="0"
-                        onclick={() => handleExtensionRowClick(ext)}
-                        onkeydown={(e) => { if (e.key === 'Enter') handleExtensionRowClick(ext); }}
+                        class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-accent hover:text-accent-foreground transition-all"
                       >
                         <div class="flex items-center gap-2 min-w-0">
                           <span class="text-sm shrink-0">{ext.icon}</span>
                           <span class="truncate text-foreground font-medium">{ext.name}</span>
                         </div>
-                        <select
-                          class="bg-muted border border-border text-[10px] text-foreground px-2 py-0.5 rounded cursor-pointer outline-none"
-                          value={ext.permission}
-                          onclick={(e) => e.stopPropagation()}
-                          onchange={(e) => setParentPermission(ext.id, (e.target as HTMLSelectElement).value as ParentPermissionState)}
+                        <button
+                          type="button"
+                          onclick={(e) => {
+                            e.stopPropagation();
+                            const nextState = ext.permission === 'off' ? 'allow' : 'off';
+                            setParentPermission(ext.id, nextState);
+                          }}
+                          class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {ext.permission !== 'off' ? 'bg-primary' : 'bg-muted'}"
+                          role="switch"
+                          aria-checked={ext.permission !== 'off'}
+                          title={ext.permission !== 'off' ? 'Enabled (Click to turn off)' : 'Disabled (Click to turn on)'}
                         >
-                          {#if ext.tools && ext.tools.length > 0}
-                            <option value="per_tool">Per Tool</option>
-                          {/if}
-                          <option value="off">Off</option>
-                          <option value="ask">Ask</option>
-                          <option value="allow">Allow</option>
-                        </select>
+                          <span
+                            class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-background shadow-xs ring-0 transition duration-200 ease-in-out {ext.permission !== 'off' ? 'translate-x-4' : 'translate-x-0'}"
+                          ></span>
+                        </button>
                       </div>
-
-                      {#if selectedExtForTools?.id === ext.id && ext.tools}
-                        <div class="pl-6 flex flex-col gap-0.5 border-l border-border ml-4 mt-0.5 mb-1.5">
-                          {#each ext.tools as tool (tool.id)}
-                            <div class="flex items-center justify-between py-1 px-2 hover:bg-accent hover:text-accent-foreground rounded">
-                              <span class="text-[11px] text-muted-foreground truncate">{tool.name}</span>
-                              {#if ext.permission === 'per_tool'}
-                                <select
-                                  class="bg-muted border border-border text-[9px] text-foreground px-1.5 py-0.5 rounded cursor-pointer outline-none"
-                                  value={tool.permission}
-                                  onclick={(e) => e.stopPropagation()}
-                                  onchange={(e) => setToolPermission(ext.id, tool.id, (e.target as HTMLSelectElement).value as PermissionState)}
-                                >
-                                  <option value="off">Off</option>
-                                  <option value="ask">Ask</option>
-                                  <option value="allow">Allow</option>
-                                </select>
-                              {/if}
-                            </div>
-                          {/each}
-                        </div>
-                      {/if}
                     {/each}
                   </div>
                 {/each}
               </div>
+
+              <!-- Bottom More Options Button -->
+              <button
+                onclick={openToolsSettings}
+                class="w-full p-2.5 bg-muted/60 hover:bg-muted border-t border-border flex items-center justify-between text-xs font-medium text-foreground transition-all cursor-pointer group"
+              >
+                <div class="flex items-center gap-2">
+                  <SlidersHorizontal class="size-3.5 text-primary group-hover:rotate-90 transition-transform" />
+                  <span>More Options...</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  {#if keybindingStore.isCtrlPressed}
+                    <Kbd.Root>C</Kbd.Root>
+                  {/if}
+                  <ChevronRight class="size-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </button>
             </div>
           {/if}
         </div>
 
         <!-- Attach Popover -->
         <div class="relative attach-picker-container">
+          {#if keybindingStore.isCtrlPressed}
+            <div class="absolute -top-7 right-1/2 translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+              <Kbd.Group>
+                <Kbd.Root>Ctrl</Kbd.Root>
+                <Kbd.Root>F</Kbd.Root>
+              </Kbd.Group>
+            </div>
+          {/if}
           <InputGroup.Button
             variant="ghost"
-            class="rounded-full size-7 flex items-center justify-center p-0 text-muted-foreground hover:text-foreground hover:bg-muted bg-transparent border-none"
+            class="rounded-xl size-8 flex items-center justify-center p-0 text-muted-foreground hover:text-foreground hover:bg-muted bg-transparent border-none cursor-pointer"
             onclick={toggleAttachMenu}
-            title="Attach files or folders"
+            title="Attach files or folders (Ctrl+F)"
           >
-            <Paperclip data-icon="inline-start" />
+            <Paperclip class="size-4" />
           </InputGroup.Button>
 
           {#if isAttachMenuOpen}
-            <div class="absolute bottom-full right-0 mb-2 w-[160px] bg-popover border border-border rounded-xl shadow-2xl z-50 p-1 flex flex-col gap-0.5 animate-in fade-in duration-100">
-              <button onclick={handleAttachFiles} class="flex items-center gap-2.5 w-full px-3 py-2 text-xs rounded-lg hover:bg-accent hover:text-accent-foreground text-foreground text-left transition-all">
-                <File class="size-3.5 text-muted-foreground" />
-                <span>Attach Files...</span>
+            <div class="absolute bottom-full right-1/2 translate-x-1/2 mb-2 w-[160px] bg-popover border border-border rounded-xl shadow-2xl z-50 p-1 flex flex-col gap-0.5 animate-in fade-in duration-100">
+              <button onclick={handleAttachFiles} class="flex items-center justify-between w-full px-3 py-2 text-xs rounded-lg hover:bg-accent hover:text-accent-foreground text-foreground text-left transition-all">
+                <div class="flex items-center gap-2.5">
+                  <File class="size-3.5 text-muted-foreground" />
+                  <span>Attach Files...</span>
+                </div>
+                {#if keybindingStore.isCtrlPressed}
+                  <Kbd.Root>1</Kbd.Root>
+                {/if}
               </button>
-              <button onclick={handleAttachFolder} class="flex items-center gap-2.5 w-full px-3 py-2 text-xs rounded-lg hover:bg-accent hover:text-accent-foreground text-foreground text-left transition-all">
-                <Folder class="size-3.5 text-muted-foreground" />
-                <span>Attach Folder...</span>
+              <button onclick={handleAttachFolder} class="flex items-center justify-between w-full px-3 py-2 text-xs rounded-lg hover:bg-accent hover:text-accent-foreground text-foreground text-left transition-all">
+                <div class="flex items-center gap-2.5">
+                  <Folder class="size-3.5 text-muted-foreground" />
+                  <span>Attach Folder...</span>
+                </div>
+                {#if keybindingStore.isCtrlPressed}
+                  <Kbd.Root>2</Kbd.Root>
+                {/if}
               </button>
             </div>
           {/if}
@@ -1439,16 +1927,23 @@
         <Separator orientation="vertical" class="!h-4 bg-border" />
 
         <!-- Send button -->
-        <InputGroup.Button
-          variant="default"
-          class="rounded-full size-7 flex items-center justify-center p-0"
-          disabled={!promptText.trim() && attachedFiles.length === 0}
-          onclick={handleSubmit}
-          title="Send Message"
-        >
-          <ArrowUpIcon data-icon="inline-start" />
-          <span class="sr-only">Send</span>
-        </InputGroup.Button>
+        <div class="relative">
+          {#if keybindingStore.isCtrlPressed}
+            <div class="absolute -top-7 right-1/2 translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+              <Kbd.Root>Enter</Kbd.Root>
+            </div>
+          {/if}
+          <InputGroup.Button
+            variant="default"
+            class="rounded-xl size-8.5 h-8.5 flex items-center justify-center p-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all shrink-0 ml-0.5"
+            disabled={!promptText.trim() && attachedFiles.length === 0}
+            onclick={handleSubmit}
+            title="Send Message (Enter)"
+          >
+            <CornerDownLeft class="size-4.5 stroke-[2.2]" />
+            <span class="sr-only">Send</span>
+          </InputGroup.Button>
+        </div>
       </div>
     </InputGroup.Addon>
   </InputGroup.Root>

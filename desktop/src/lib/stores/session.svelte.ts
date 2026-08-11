@@ -10,6 +10,8 @@ export class SessionStore {
   agents = $state<AgentConfig[]>([]);
   autoStartRecording = $state(false);
   private clientSessions = new Map<string, AcpClientSession>();
+  private saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private isCreatingDraft = false;
 
   constructor() {
     this.agents = [
@@ -20,10 +22,109 @@ export class SessionStore {
 
     this.sessions = [];
     this.activeSessionId = null;
+    this.loadSessionsFromDisk();
+  }
+
+  async loadSessionsFromDisk() {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const files: string[] = await invoke('list_session_files');
+      if (Array.isArray(files) && files.length > 0) {
+        const loaded: SessionData[] = [];
+        for (const str of files) {
+          try {
+            const data: SessionData = JSON.parse(str);
+            if (data && data.id) {
+              // Ensure live session runtime states are reset to clean idle
+              data.status = 'idle';
+              loaded.push(data);
+            }
+          } catch {
+            // Ignore corrupted session file parse errors
+          }
+        }
+        if (loaded.length > 0) {
+          loaded.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+          this.sessions = loaded;
+          this.activeSessionId = loaded[0].id;
+          return;
+        }
+      }
+    } catch {
+      // LocalStorage fallback for browser-only mode
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem('hirn_saved_sessions');
+        if (stored) {
+          try {
+            const loaded: SessionData[] = JSON.parse(stored);
+            if (Array.isArray(loaded) && loaded.length > 0) {
+              this.sessions = loaded;
+              this.activeSessionId = loaded[0].id;
+              return;
+            }
+          } catch {}
+        }
+      }
+    }
+    this.ensureDraftSession();
+  }
+
+  async saveSessionToDisk(session: SessionData) {
+    if (session.isDraft && session.messages.length === 0) return;
+
+    if (this.saveTimers.has(session.id)) {
+      clearTimeout(this.saveTimers.get(session.id));
+    }
+
+    const timer = setTimeout(async () => {
+      this.saveTimers.delete(session.id);
+
+      // Serialize non-circular clean JSON session data
+      const cleanSessionData = {
+        id: session.id,
+        title: session.title,
+        agentId: session.agentId,
+        agentName: session.agentName,
+        selectedModelId: session.selectedModelId,
+        status: 'idle',
+        messages: session.messages,
+        cwd: session.cwd,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt,
+        isDraft: session.isDraft,
+        archived: session.archived || false
+      };
+
+      const jsonStr = JSON.stringify(cleanSessionData, null, 2);
+
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('save_session_file', { id: session.id, content: jsonStr });
+      } catch {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('hirn_saved_sessions', JSON.stringify(this.sessions));
+        }
+      }
+    }, 500);
+
+    this.saveTimers.set(session.id, timer);
   }
 
   get activeSession(): SessionData | null {
-    return this.sessions.find(s => s.id === this.activeSessionId) ?? null;
+    const found = this.sessions.find(s => s.id === this.activeSessionId);
+    if (found) return found;
+    const existingDraft = this.sessions.find(s => s.isDraft && s.messages.length === 0);
+    if (existingDraft) return existingDraft;
+    return this.sessions[0] ?? null;
+  }
+
+  ensureDraftSession(agentId?: string): SessionData {
+    const existingDraft = this.sessions.find(s => s.isDraft && s.messages.length === 0);
+    if (existingDraft) {
+      this.activeSessionId = existingDraft.id;
+      return existingDraft;
+    }
+    return this.createSession(agentId || this.agents[0]?.id || 'hirn-local', undefined, true, true);
   }
 
   selectSession(id: string) {
@@ -35,8 +136,12 @@ export class SessionStore {
     if (session) {
       session.archived = true;
       if (this.activeSessionId === id) {
-        const remaining = this.sessions.filter(s => !s.archived);
-        this.activeSessionId = remaining[0]?.id ?? null;
+        const remaining = this.sessions.filter(s => !s.archived && !s.isDraft);
+        if (remaining.length > 0) {
+          this.activeSessionId = remaining[0].id;
+        } else {
+          this.ensureDraftSession();
+        }
       }
     }
   }
@@ -49,8 +154,16 @@ export class SessionStore {
     }
   }
 
+  createSession(agentId: string, title?: string, eagerConnect = true, isDraft = true) {
+    // If creating a draft session or a session without explicit title, reuse an existing empty draft session for this agent
+    if (isDraft || !title) {
+      const existingEmpty = this.sessions.find(s => s.agentId === agentId && s.messages.length === 0 && s.isDraft);
+      if (existingEmpty) {
+        this.activeSessionId = existingEmpty.id;
+        return existingEmpty;
+      }
+    }
 
-  createSession(agentId: string, title?: string, eagerConnect = true) {
     const agent = this.agents.find(a => a.id === agentId) ?? this.agents[0];
     let initialModelId = '';
     if (typeof localStorage !== 'undefined') {
@@ -67,7 +180,8 @@ export class SessionStore {
       status: 'idle',
       messages: [],
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      isDraft
     };
     this.sessions.unshift(newSession);
     this.activeSessionId = newSession.id;
@@ -120,6 +234,9 @@ export class SessionStore {
 
         if (notif.type === 'status') {
           session.status = notif.payload;
+          if (notif.payload === 'idle' || notif.payload === 'error') {
+            this.saveSessionToDisk(session);
+          }
         } else if (notif.type === 'error') {
           session.status = 'error';
           const p = notif.payload;
@@ -148,6 +265,7 @@ export class SessionStore {
           };
           session.messages.push(errMsg);
           currentAssistantMsg = null;
+          this.saveSessionToDisk(session);
         } else if (notif.type === 'thought') {
           if (!currentAssistantMsg) {
             currentAssistantMsg = {
@@ -161,6 +279,7 @@ export class SessionStore {
           } else {
             currentAssistantMsg.thoughts = (currentAssistantMsg.thoughts || '') + notif.payload;
           }
+          this.saveSessionToDisk(session);
         } else if (notif.type === 'tool_call') {
           if (!currentAssistantMsg) {
             currentAssistantMsg = {
@@ -175,6 +294,7 @@ export class SessionStore {
             currentAssistantMsg.toolCalls = currentAssistantMsg.toolCalls || [];
             currentAssistantMsg.toolCalls.push(notif.payload);
           }
+          this.saveSessionToDisk(session);
         } else if (notif.type === 'text') {
           if (!currentAssistantMsg) {
             currentAssistantMsg = {
@@ -187,6 +307,7 @@ export class SessionStore {
           } else {
             currentAssistantMsg.content = (currentAssistantMsg.content || '') + notif.payload;
           }
+          this.saveSessionToDisk(session);
         }
       }, session?.cwd);
 
@@ -198,6 +319,7 @@ export class SessionStore {
       }
       if (session) {
         session.thoughtLevelConfig = result.thoughtLevelConfig;
+        session.modeConfig = result.modeConfig;
       }
     } catch (err: any) {
       console.warn(`[SessionStore] Connection or protocol error for agent ${agent.name}:`, err);
@@ -229,6 +351,17 @@ export class SessionStore {
     return clientSession;
   }
 
+  async setMode(sessionId: string, modeId: string) {
+    const session = this.sessions.find(s => s.id === sessionId);
+    if (!session?.modeConfig) return;
+
+    const clientSession = this.clientSessions.get(sessionId);
+    if (!clientSession) return;
+
+    await clientSession.setMode(modeId, session.modeConfig.configId);
+    session.modeConfig = { ...session.modeConfig, currentModeId: modeId };
+  }
+
   async setThinkingLevel(sessionId: string, value: string) {
     const session = this.sessions.find(s => s.id === sessionId);
     if (!session?.thoughtLevelConfig) return;
@@ -243,6 +376,16 @@ export class SessionStore {
   async sendMessage(sessionId: string, text: string) {
     const session = this.sessions.find(s => s.id === sessionId);
     if (!session) return;
+
+    // Promote volatile draft session to permanent session in sidebar on first prompt
+    if (session.isDraft) {
+      session.isDraft = false;
+      const clean = text.trim();
+      if (session.title.startsWith('Chat with')) {
+        session.title = clean.length > 30 ? clean.slice(0, 30) + '...' : clean;
+      }
+    }
+
     const agent = this.agents.find(a => a.id === session.agentId) || this.agents[0];
 
     const userMsg: ChatMessage = {
@@ -258,6 +401,8 @@ export class SessionStore {
     try {
       const clientSession = await this.ensureClientSession(sessionId);
       await clientSession.sendPrompt(text, session.selectedModelId);
+      session.status = 'idle';
+      this.saveSessionToDisk(session);
     } catch (err: any) {
       session.status = 'error';
       session.messages.push({
@@ -273,6 +418,7 @@ export class SessionStore {
         },
         timestamp: Date.now()
       });
+      this.saveSessionToDisk(session);
     }
   }
 }

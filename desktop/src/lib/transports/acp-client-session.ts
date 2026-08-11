@@ -1,5 +1,5 @@
 import * as acp from '@agentclientprotocol/sdk';
-import type { AcpModel, ThoughtLevelConfig } from '../types/acp';
+import type { AcpModel, ThoughtLevelConfig, AcpModeConfig } from '../types/acp';
 import type { ExtendedAcpStream } from './tauri-ipc-transport';
 
 export type AcpNotificationCallback = (notif: {
@@ -10,6 +10,7 @@ export type AcpNotificationCallback = (notif: {
 export interface AcpSessionResult {
   models: AcpModel[];
   thoughtLevelConfig: ThoughtLevelConfig | null;
+  modeConfig: AcpModeConfig | null;
 }
 
 export class AcpClientSession {
@@ -19,6 +20,7 @@ export class AcpClientSession {
   public sessionId: string | null = null;
   public fetchedModels: AcpModel[] = [];
   public thoughtLevelConfig: ThoughtLevelConfig | null = null;
+  public modeConfig: AcpModeConfig | null = null;
 
   constructor(stream: ExtendedAcpStream) {
     this.stream = stream;
@@ -33,11 +35,37 @@ export class AcpClientSession {
 
         const sUpdate = update.sessionUpdate || update.type;
 
-        if (sUpdate === 'agent_thought_chunk' || update.thought) {
-          const text = update.content?.type === 'text' ? update.content.text : update.thought || update.content;
+        // Unpack text content from ACP update object/array variants
+        const extractText = (obj: any): string | null => {
+          if (!obj) return null;
+          if (typeof obj === 'string') return obj;
+          if (obj.text && typeof obj.text === 'string') return obj.text;
+          if (obj.delta && typeof obj.delta === 'string') return obj.delta;
+          if (obj.thought && typeof obj.thought === 'string') return obj.thought;
+          if (obj.content) {
+            if (typeof obj.content === 'string') return obj.content;
+            if (obj.content.text) return obj.content.text;
+            if (Array.isArray(obj.content)) {
+              return obj.content
+                .map((c: any) => (typeof c === 'string' ? c : c.text || c.delta || ''))
+                .join('');
+            }
+          }
+          return null;
+        };
+
+        if (sUpdate === 'agent_thought_chunk' || update.thought || sUpdate === 'thought') {
+          const text = extractText(update);
           if (text) onNotification({ type: 'thought', payload: text });
-        } else if (sUpdate === 'agent_message_chunk' || update.text || update.delta) {
-          const text = update.content?.type === 'text' ? update.content.text : update.text || update.delta || update.content;
+        } else if (
+          sUpdate === 'agent_message_chunk' ||
+          sUpdate === 'message_chunk' ||
+          sUpdate === 'text_chunk' ||
+          update.text ||
+          update.delta ||
+          update.content
+        ) {
+          const text = extractText(update);
           if (text) onNotification({ type: 'text', payload: text });
         } else if (sUpdate === 'tool_call' || update.toolCall) {
           onNotification({ type: 'tool_call', payload: update.toolCall || update });
@@ -79,6 +107,22 @@ export class AcpClientSession {
         this.sessionId = newSessionRes.sessionId;
       }
 
+      // 1. Check direct modes payload from NewSessionResponse
+      if (newSessionRes && (newSessionRes as any).modes) {
+        const modesRes = (newSessionRes as any).modes;
+        if (modesRes.availableModes && Array.isArray(modesRes.availableModes)) {
+          this.modeConfig = {
+            currentModeId: modesRes.currentModeId || modesRes.availableModes[0]?.id || 'default',
+            modes: modesRes.availableModes.map((m: any) => ({
+              id: m.id || m.name,
+              name: m.name || m.id,
+              description: m.description
+            }))
+          };
+        }
+      }
+
+      // 2. Parse configOptions if available
       if (newSessionRes && Array.isArray((newSessionRes as any).configOptions)) {
         const configOptions = (newSessionRes as any).configOptions;
 
@@ -86,7 +130,6 @@ export class AcpClientSession {
         const modelConfig = configOptions.find((c: any) => c.category === 'model' || c.id === 'model' || c.id === 'modelId');
         if (modelConfig && modelConfig.type === 'select') {
           const opts = modelConfig.options || [];
-          // Handle both flat options and grouped options
           const flatOptions = opts.flatMap((o: any) => o.options ? o.options : [o]);
           for (const opt of flatOptions) {
             const mId = opt.value || opt.id;
@@ -113,6 +156,25 @@ export class AcpClientSession {
           };
           console.log('[AcpClientSession] Thought level config:', this.thoughtLevelConfig);
         }
+
+        // Parse mode config from configOptions if not already found in direct modes payload
+        if (!this.modeConfig) {
+          const mConfig = configOptions.find((c: any) => c.category === 'mode');
+          if (mConfig && mConfig.type === 'select') {
+            const opts = mConfig.options || [];
+            const flatOptions = opts.flatMap((o: any) => o.options ? o.options : [o]);
+            this.modeConfig = {
+              configId: mConfig.id,
+              currentModeId: mConfig.currentValue || flatOptions[0]?.value || 'default',
+              modes: flatOptions.map((o: any) => ({
+                id: o.value || o.id,
+                name: o.name || o.value,
+                description: o.description
+              }))
+            };
+            console.log('[AcpClientSession] Mode config:', this.modeConfig);
+          }
+        }
       }
     } catch (e) {
       console.log('[AcpClientSession] Note: session/new response skipped or optional:', e);
@@ -132,7 +194,31 @@ export class AcpClientSession {
     this.isInitialized = true;
     console.log('[AcpClientSession] Connected natively via SDK with models:', this.fetchedModels, 'SessionId:', this.sessionId);
 
-    return { models: this.fetchedModels, thoughtLevelConfig: this.thoughtLevelConfig };
+    return {
+      models: this.fetchedModels,
+      thoughtLevelConfig: this.thoughtLevelConfig,
+      modeConfig: this.modeConfig
+    };
+  }
+
+  async setMode(modeId: string, configId?: string): Promise<void> {
+    if (!this.connection || !this.sessionId) return;
+    try {
+      if (configId) {
+        await this.connection.agent.request(acp.methods.agent.session.setConfigOption, {
+          sessionId: this.sessionId,
+          configId,
+          value: modeId
+        });
+      } else {
+        await this.connection.agent.request(acp.methods.agent.session.setMode, {
+          sessionId: this.sessionId,
+          modeId
+        });
+      }
+    } catch (e) {
+      console.warn('[AcpClientSession] setMode failed:', e);
+    }
   }
 
   async setConfigOption(configId: string, value: string): Promise<void> {
@@ -148,7 +234,7 @@ export class AcpClientSession {
     }
   }
 
-  async sendPrompt(promptText: string, modelId?: string, thinkingEffort?: string): Promise<void> {
+  async sendPrompt(promptText: string, modelId?: string): Promise<void> {
     if (!this.isInitialized || !this.connection) {
       throw new Error('ACP Client Session is not initialized.');
     }

@@ -20,6 +20,13 @@ export interface ThoughtLevelConfig {
   levels: { value: string; name: string }[];
 }
 
+/** Parsed from ACP session modes or configOptions where category === 'mode' */
+export interface AcpModeConfig {
+  configId?: string;
+  currentModeId: string;
+  modes: { id: string; name: string; description?: string }[];
+}
+
 export interface ToolCall {
   id: string;
   name: string;
@@ -76,7 +83,10 @@ export interface SessionData {
   createdAt: number;
   updatedAt: number;
   archived?: boolean;
+  isDraft?: boolean;
   cwd?: string;
   /** Populated from ACP configOptions with category 'thought_level'. Null = agent doesn't support it. */
   thoughtLevelConfig?: ThoughtLevelConfig | null;
+  /** Populated from ACP session modes or configOptions with category 'mode'. Null = agent doesn't support it. */
+  modeConfig?: AcpModeConfig | null;
 }

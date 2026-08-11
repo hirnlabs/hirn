@@ -73,6 +73,141 @@ fn send_acp_stdin(state: State<'_, ProcessState>, pid: u32, message: String) -> 
     }
 }
 
+fn ensure_extension(name: &str, default_ext: &str) -> String {
+    if name.ends_with(".yaml") || name.ends_with(".json") {
+        name.to_string()
+    } else if default_ext.starts_with('.') {
+        format!("{}{}", name, default_ext)
+    } else {
+        format!("{}.{}", name, default_ext)
+    }
+}
+
+#[tauri::command]
+fn save_named_config(name: String, content: String) -> Result<(), String> {
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|_| "Could not determine home directory".to_string())?;
+
+    let config_dir = std::path::Path::new(&home).join(".hirn").join("config");
+    std::fs::create_dir_all(&config_dir)
+        .map_err(|e| format!("Failed to create directory ~/.hirn/config: {}", e))?;
+
+    let filename = ensure_extension(&name, ".yaml");
+
+    let file_path = config_dir.join(filename);
+    std::fs::write(&file_path, content)
+        .map_err(|e| format!("Failed to write config file '{:?}': {}", file_path, e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+fn load_named_config(name: String) -> Result<String, String> {
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|_| "Could not determine home directory".to_string())?;
+
+    let config_dir = std::path::Path::new(&home).join(".hirn").join("config");
+
+    let possible_names = if name.ends_with(".yaml") || name.ends_with(".json") {
+        vec![name.clone()]
+    } else {
+        vec![ensure_extension(&name, ".yaml"), ensure_extension(&name, ".json")]
+    };
+
+    for fname in possible_names {
+        let file_path = config_dir.join(&fname);
+        if file_path.exists() {
+            return std::fs::read_to_string(&file_path)
+                .map_err(|e| format!("Failed to read config file '{:?}': {}", file_path, e));
+        }
+    }
+
+    Err("File not found".to_string())
+}
+
+#[tauri::command]
+fn save_agent_config(agent_id: String, content: String) -> Result<(), String> {
+    save_named_config(format!("{}.yaml", agent_id), content)
+}
+
+#[tauri::command]
+fn load_agent_config(agent_id: String) -> Result<String, String> {
+    load_named_config(format!("{}.yaml", agent_id))
+}
+
+#[tauri::command]
+fn save_session_file(id: String, content: String) -> Result<(), String> {
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|_| "Could not determine home directory".to_string())?;
+
+    let sessions_dir = std::path::Path::new(&home).join(".hirn").join("sessions");
+    std::fs::create_dir_all(&sessions_dir)
+        .map_err(|e| format!("Failed to create directory ~/.hirn/sessions: {}", e))?;
+
+    let filename = ensure_extension(&id, ".json");
+
+    let file_path = sessions_dir.join(filename);
+    std::fs::write(&file_path, content)
+        .map_err(|e| format!("Failed to write session file '{:?}': {}", file_path, e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+fn load_session_file(id: String) -> Result<String, String> {
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|_| "Could not determine home directory".to_string())?;
+
+    let sessions_dir = std::path::Path::new(&home).join(".hirn").join("sessions");
+    let possible_names = if id.ends_with(".yaml") || id.ends_with(".json") {
+        vec![id.clone()]
+    } else {
+        vec![ensure_extension(&id, ".json"), ensure_extension(&id, ".yaml")]
+    };
+
+    for fname in possible_names {
+        let file_path = sessions_dir.join(&fname);
+        if file_path.exists() {
+            return std::fs::read_to_string(&file_path)
+                .map_err(|e| format!("Failed to read session file '{:?}': {}", file_path, e));
+        }
+    }
+
+    Err("Session file not found".to_string())
+}
+
+#[tauri::command]
+fn list_session_files() -> Result<Vec<String>, String> {
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|_| "Could not determine home directory".to_string())?;
+
+    let sessions_dir = std::path::Path::new(&home).join(".hirn").join("sessions");
+    if !sessions_dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut contents = Vec::new();
+    let entries = std::fs::read_dir(&sessions_dir)
+        .map_err(|e| format!("Failed to read directory ~/.hirn/sessions: {}", e))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+        let path = entry.path();
+        if path.is_file() {
+            let text = std::fs::read_to_string(&path)
+                .map_err(|e| format!("Failed to read session file '{:?}': {}", path, e))?;
+            contents.push(text);
+        }
+    }
+
+    Ok(contents)
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -85,7 +220,21 @@ pub fn run() {
             children: Mutex::new(HashMap::new()),
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, spawn_acp_agent, send_acp_stdin])
+        .plugin(tauri_plugin_fs::init())
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            spawn_acp_agent,
+            send_acp_stdin,
+            save_agent_config,
+            load_agent_config,
+            save_named_config,
+            load_named_config,
+            save_session_file,
+            load_session_file,
+            list_session_files
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+
