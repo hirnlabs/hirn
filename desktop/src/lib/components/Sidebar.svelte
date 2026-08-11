@@ -97,7 +97,7 @@
 
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
-    const unarchived = store.sessions.filter(s => !s.archived);
+    const unarchived = store.sessions.filter(s => !s.archived && !s.isDraft);
 
     unarchived.forEach(session => {
       const diff = now - (session.updatedAt || session.createdAt || now);

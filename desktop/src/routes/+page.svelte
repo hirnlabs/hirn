@@ -14,16 +14,16 @@
 </script>
 
 <div class="flex w-screen h-screen overflow-hidden bg-background text-foreground">
-  <Sidebar.Provider>
+  <Sidebar.Provider class="h-full">
     <AppSidebar {store} bind:activeNav />
 
-    <Sidebar.Inset class="flex-1 h-screen overflow-hidden flex flex-col">
+    <Sidebar.Inset class="flex-1 h-full overflow-hidden flex flex-col">
       {#if activeNav === 'sessions'}
         <ChatCanvas {store} />
       {:else if activeNav === 'apps'}
         <AppsView />
       {:else if activeNav === 'agents'}
-        <AgentsView {store} />
+        <AgentsView {store} bind:activeNav />
       {:else if activeNav === 'models'}
         <ModelsView />
       {:else if activeNav === 'history'}
