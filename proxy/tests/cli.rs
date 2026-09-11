@@ -26,7 +26,19 @@ fn parses_skill_add_and_activation_verbs() {
     assert!(matches!(cli.command, Commands::Skill { .. }));
 
     let cli = Cli::try_parse_from(["hirn-proxy", "add", "owner/repo"]).unwrap();
-    assert!(matches!(cli.command, Commands::Add { .. }));
+    assert!(matches!(
+        cli.command,
+        Commands::Add { local: false, only: None, .. }
+    ));
+
+    let cli = Cli::try_parse_from(["hirn-proxy", "add", "--local", "--only", "tdd", "owner/repo"]).unwrap();
+    match cli.command {
+        Commands::Add { local, only, .. } => {
+            assert!(local);
+            assert_eq!(only.as_deref(), Some("tdd"));
+        }
+        _ => panic!("expected Add"),
+    }
 
     let cli = Cli::try_parse_from(["hirn-proxy", "activate", "my-tool"]).unwrap();
     assert!(matches!(cli.command, Commands::Activate { .. }));

@@ -54,11 +54,21 @@ fn pretty_run_shows_tool_and_args() {
 }
 
 // Every verb dispatches without dropping its payload.
+//
+// `Add` hits the network, so it is covered in `tests/add.rs` with a fake
+// env — here it only asserts the failure verdict still names the source.
 #[test]
 fn each_verb_mentions_its_subject() {
     let cases = [
         (Commands::Skill { name: "code-review".into() }, "code-review"),
-        (Commands::Add { source: "owner/repo".into() }, "owner/repo"),
+        (
+            Commands::Add {
+                source: "".into(),
+                local: false,
+                only: None,
+            },
+            "add",
+        ),
         (Commands::Activate { name: "my-tool".into() }, "my-tool"),
         (Commands::Deactivate { name: "my-tool".into() }, "my-tool"),
     ];

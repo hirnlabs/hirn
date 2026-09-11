@@ -34,10 +34,16 @@ pub enum Commands {
         /// Skill name.
         name: String,
     },
-    /// Add a tool from a source.
+    /// Add a skill from a GitHub-like source.
     Add {
-        /// Source (path or URL).
+        /// Source: `owner/repo`, `owner/repo/path`, or full URL.
         source: String,
+        /// Install into `<project>/.agents/` instead of `~/.hirn/`.
+        #[arg(long)]
+        local: bool,
+        /// Install a single skill directory by name (repo root otherwise).
+        #[arg(long)]
+        only: Option<String>,
     },
     /// Activate a tool.
     Activate {
