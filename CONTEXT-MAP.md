@@ -4,7 +4,7 @@
 
 - [Agent](./agent/CONTEXT.md) — ACP compliant orchestration engine and workflow automation.
 - [Assistant](./assistant/CONTEXT.md) — Mobile client (Flutter + Rust) for on-the-go access.
-- [Data](./data/CONTEXT.md) — Persistence management (File/SQLite/Vector/Graph).
+- [Data](./data/CONTEXT.md) — Persistence management (canonical Markdown files, Loro CRDT overlay, derived SQLite and Grafeo indices).
 - [Desktop](./desktop/CONTEXT.md) — Tauri-based cross-platform GUI & tool host.
 - [Homepage](./homepage/CONTEXT.md) — Web dashboard & documentation portal.
 - [Router](./router/CONTEXT.md) — Intent classification & model dispatch logic.

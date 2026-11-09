@@ -1,0 +1,35 @@
+[package]
+name = "hirn-data"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+
+[lib]
+name = "hirn_data"
+path = "src/lib.rs"
+
+[dependencies]
+blake3 = "1.5"
+dirs = "5.0"
+grafeo = { version = "=0.6.0", features = ["cypher"] }
+hyalo-core = "=0.25.0"
+hyalo-mdlint = "=0.25.0"
+indexmap = "2"
+loro = "1.17"
+nanoid = "0.4"
+notify = "6.1"
+rusqlite = { version = "0.41", features = ["bundled", "backup"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sqlite-vec = "=0.1.9"
+toml = "0.8"
+
+[dependencies.fastembed]
+version = "7.5"
+default-features = false
+# `ort-load-dynamic` skips ort-sys' static MSVC prebuilt, which does not link
+# against the installed Rust 1.99 toolchain (unresolved `__std_*` symbols).
+features = ["ort-load-dynamic", "hf-hub-native-tls"]
+
+[dev-dependencies]
+tempfile = "3"

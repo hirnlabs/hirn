@@ -17,7 +17,7 @@ A self-contained directory under `apps/<app-id>/` containing a `manifest.json`, 
 _Avoid_: Package, archive, plugin folder
 
 **Hirn Host Protocol**:
-The postMessage JSON-RPC contract and capability-upgrade mechanism between an MCP App iframe and the host application (Tauri Desktop or Flutter Assistant).
+The postMessage JSON-RPC contract and capability-upgrade mechanism between an MCP App iframe and the host application (Tauri Desktop or Flutter Assistant). Supports exchangeable transports (Tauri IPC channels, Flutter platform channels, WebSockets) and exposes document operations (`data.doc.*`), multi-modal queries (`data.query`), and granular mutations (`data.mutate`) via stable `NodeHandle` keys.
 _Avoid_: FFI bridge, WebSocket protocol, custom IPC
 
 **Capability Grant**:
